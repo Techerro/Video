@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Responsive Video Player</title>
+    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- hls.js library for adaptive streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7"></script>
     <style>
         /* Custom styles for the range input slider (progress bar thumb) */
@@ -107,6 +110,8 @@
         /* Settings menu specific styles */
         .settings-menu {
             background-color: rgba(0, 0, 0, 0.9); /* Darker, slightly transparent */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 12px; /* Rounded corners */
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             min-width: 200px; /* Default for mobile */
@@ -171,19 +176,29 @@
 <body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center overflow-hidden">
 
     <div class="p-4 w-full max-w-7xl">
+        <!-- URL Input and Load Button -->
         <div class="flex items-center space-x-2 mb-4">
             <input type="text" id="video-url-input" class="flex-grow p-2 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 text-sm md:text-base" placeholder="Enter HLS (.m3u8) video URL here...">
             <button id="load-video-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200 text-sm md:text-base" data-focusable>Load</button>
         </div>
 
+        <!-- Main Player Container -->
         <div id="video-player-container" class="relative w-full aspect-video bg-black rounded-lg md:rounded-xl overflow-hidden shadow-2xl">
             
+            <!-- The Video Element -->
             <video id="video-player" class="w-full h-full object-contain" preload="auto"></video>
 
+            <!-- Loading Spinner Overlay -->
             <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
                 <div class="loading-spinner"></div>
             </div>
 
+            <!-- Single-click Play/Pause Icon Overlay -->
+            <div id="click-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
+                <i id="click-icon" class="fas fa-play text-white text-5xl md:text-8xl drop-shadow-lg"></i>
+            </div>
+
+            <!-- Pause Details Overlay (Initially hidden) -->
             <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
                 <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 max-w-4xl text-center md:text-left">
                     <img id="video-thumbnail" class="rounded-lg shadow-lg video-thumbnail" src="https://placehold.co/400x225/e50914/ffffff?text=Video+Thumbnail" alt="Video Thumbnail">
@@ -195,6 +210,7 @@
                 </div>
             </div>
 
+            <!-- End of Video "Next Episode" Overlay -->
             <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
                 <h3 class="text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">Video Finished!</h3>
                 <button id="next-episode-btn" class="px-6 py-3 md:px-10 md:py-6 bg-red-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg focus:ring-4 focus:ring-white" data-focusable>
@@ -202,71 +218,96 @@
                 </button>
             </div>
 
+            <!-- Video Controls Container -->
             <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
+                <!-- Progress Bar -->
                 <div class="progress-bar-container mb-3 md:mb-4">
                     <div id="progress-buffered" class="progress-buffered"></div>
                     <div id="progress-played" class="progress-played"></div>
                     <input type="range" id="progress-bar" class="w-full h-full absolute" value="0" min="0" max="100">
                 </div>
                 
+                <!-- Control Buttons and Timestamps -->
                 <div class="flex items-center justify-between">
+                    <!-- Left-side Controls (Play/Pause, Seek) -->
                     <div class="flex items-center space-x-3 md:space-x-6">
+                        <!-- Play/Pause Button -->
                         <button id="play-pause-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                            <i class="fas fa-pause"></i> </button>
+                            <i class="fas fa-pause"></i> <!-- Default to pause icon assuming auto-play -->
+                        </button>
+                        <!-- Backward 10s Button -->
                         <button id="backward-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white flex items-center" data-focusable>
                             <i class="fas fa-redo-alt rotate-180"></i><span class="ml-1 text-sm md:text-base">10</span>
                         </button>
+                        <!-- Forward 10s Button -->
                         <button id="forward-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white flex items-center" data-focusable>
                             <i class="fas fa-redo-alt"></i><span class="ml-1 text-sm md:text-base">10</span>
                         </button>
                     </div>
 
+                    <!-- Center time display -->
                     <div class="flex items-center space-x-2 text-sm md:text-base font-medium text-gray-300">
                         <span id="current-time-display">00:00</span>
                         <span class="text-gray-500">/</span>
                         <span id="duration-display">00:00</span>
                     </div>
                     
+                    <!-- Right-side Controls -->
                     <div class="flex items-center space-x-3 md:space-x-6">
-                        <div class="relative group">
+                        <!-- Volume Controls with horizontal slider -->
+                        <div class="relative flex items-center group space-x-2">
                             <button id="volume-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                                 <i class="fas fa-volume-up"></i>
                             </button>
-                            <div class="absolute bottom-full mb-2 md:mb-4 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center justify-center p-2 md:p-3 bg-gray-800 rounded-lg shadow-lg">
-                                <input type="range" id="volume-slider" class="h-16 w-2 md:h-24 md:w-2 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1" style="writing-mode: bt-lr;">
+                            <!-- Volume Slider Horizontal -->
+                            <div class="hidden group-hover:block transition-all duration-300">
+                                <input type="range" id="volume-slider" class="w-20 md:w-24 h-1 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1">
                             </div>
                         </div>
 
+                        <!-- Subtitles Button -->
                         <button id="subtitles-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-comment-dots"></i>
                         </button>
 
+                        <!-- Settings Menu Trigger -->
                         <div class="relative">
                             <button id="settings-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                                 <i class="fas fa-cog"></i>
                             </button>
+                            <!-- Settings Popup -->
                             <div id="settings-menu" class="absolute settings-menu right-0 mb-2 md:mb-4 w-52 md:w-64 p-2 md:p-4 hidden z-20">
+                                <!-- Main Settings View -->
                                 <div id="main-settings-view" class="transition-transform duration-300">
                                     <h4 class="text-gray-400 text-xs md:text-sm font-semibold mb-2 ml-4">Settings</h4>
                                     <ul class="space-y-1">
                                         <li class="menu-item text-sm md:text-base" data-menu="quality-menu" data-focusable>
-                                            <span>Video Quality</span>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-hd mr-3 text-gray-400"></i><span>Video Quality</span>
+                                            </div>
                                             <i class="fas fa-chevron-right text-gray-400"></i>
                                         </li>
                                         <li class="menu-item text-sm md:text-base" data-menu="audio-menu" data-focusable>
-                                            <span>Audio Tracks</span>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-headphones mr-3 text-gray-400"></i><span>Audio Tracks</span>
+                                            </div>
                                             <i class="fas fa-chevron-right text-gray-400"></i>
                                         </li>
                                         <li class="menu-item text-sm md:text-base" data-menu="subtitle-menu" data-focusable>
-                                            <span>Subtitles</span>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-closed-captioning mr-3 text-gray-400"></i><span>Subtitles</span>
+                                            </div>
                                             <i class="fas fa-chevron-right text-gray-400"></i>
                                         </li>
                                         <li class="menu-item text-sm md:text-base" data-menu="aspect-ratio-menu" data-focusable>
-                                            <span>Aspect Ratio</span>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-arrows-alt-h mr-3 text-gray-400"></i><span>Aspect Ratio</span>
+                                            </div>
                                             <i class="fas fa-chevron-right text-gray-400"></i>
                                         </li>
                                     </ul>
                                 </div>
+                                <!-- Submenus -->
                                 <div id="quality-menu" class="menu-submenu">
                                     <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
                                         <i class="fas fa-chevron-left mr-2"></i>
@@ -308,6 +349,7 @@
                             </div>
                         </div>
                         
+                        <!-- Fullscreen Button -->
                         <button id="fullscreen-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-expand"></i>
                         </button>
@@ -334,6 +376,8 @@
         const volumeSlider = document.getElementById('volume-slider');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
+        const clickOverlay = document.getElementById('click-overlay');
+        const clickIcon = document.getElementById('click-icon');
         const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
         const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
         const nextEpisodeBtn = document.getElementById('next-episode-btn');
@@ -405,9 +449,10 @@
         
         function updateActiveMenuItem(ulElement, activeValue, datasetKey) {
             ulElement.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
                 const checkmark = item.querySelector('.fas.fa-check');
-                if (checkmark) checkmark.classList.add('hidden');
+                if (checkmark) {
+                    checkmark.classList.add('hidden');
+                }
             });
 
             let targetItem;
@@ -418,9 +463,10 @@
             }
            
             if (targetItem) {
-                targetItem.classList.add('active');
                 const checkmark = targetItem.querySelector('.fas.fa-check');
-                if (checkmark) checkmark.classList.remove('hidden');
+                if (checkmark) {
+                    checkmark.classList.remove('hidden');
+                }
             }
         }
 
@@ -538,12 +584,24 @@
             }, 500);
         });
 
-        // Play/Pause button
+        // Play/Pause button on control bar
         playPauseBtn.addEventListener('click', () => {
             if (video.paused) {
                 video.play();
             } else {
                 video.pause();
+            }
+        });
+
+        // Single-click on video to toggle play/pause
+        videoPlayerContainer.addEventListener('click', (e) => {
+            // Check if the click target is the video element itself and not a control button
+            if (e.target === video || e.target === videoPlayerContainer) {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
             }
         });
         
@@ -564,6 +622,9 @@
             pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
             pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
             loadingOverlay.classList.add('hidden');
+            // Show the fade-in play/pause icon
+            clickIcon.className = 'fas fa-play text-white text-5xl md:text-8xl drop-shadow-lg';
+            clickOverlay.classList.remove('opacity-100');
             // Attempt to lock screen orientation on mobile devices
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(e => {
@@ -576,6 +637,13 @@
             updatePlayerUI();
             pauseDetailsOverlay.classList.remove('opacity-0', 'pointer-events-none');
             pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
+            // Show the fade-out play/pause icon
+            clickIcon.className = 'fas fa-pause text-white text-5xl md:text-8xl drop-shadow-lg';
+            clickOverlay.classList.remove('opacity-0');
+            clickOverlay.classList.add('opacity-100');
+            setTimeout(() => {
+                clickOverlay.classList.remove('opacity-100');
+            }, 500);
         });
 
         video.addEventListener('timeupdate', () => updatePlayerUI());
@@ -719,7 +787,7 @@
         });
         // For touch devices, toggle visibility on tap
         videoPlayerContainer.addEventListener('click', (e) => {
-            if (!controls.contains(e.target) && !settingsMenu.contains(e.target)) { // Don't toggle if clicking on controls or settings menu itself
+            if (!controls.contains(e.target) && !settingsMenu.contains(e.target) && e.target !== videoUrlInput && e.target !== loadVideoBtn) { 
                 if (controlsVisible) {
                     hideControls();
                 } else {
