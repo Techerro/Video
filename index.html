@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Android TV Player</title>
+    <title>Responsive Video Player</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
@@ -14,31 +14,41 @@
         /* Custom styles for the range input slider */
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 16px;
+            height: 16px;
             background: #e50914;
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
             transition: transform 0.2s ease-in-out;
         }
-
         input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
+            transform: scale(1.2);
+        }
+        @media (min-width: 768px) {
+            input[type="range"]::-webkit-slider-thumb {
+                width: 24px;
+                height: 24px;
+            }
         }
         
         /* Progress bar track with buffered section */
         .progress-bar-container {
             position: relative;
-            height: 8px;
+            height: 4px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             cursor: pointer;
         }
+        @media (min-width: 768px) {
+            .progress-bar-container {
+                height: 8px;
+            }
+        }
         #progress-bar {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
+            height: 100%;
             background: transparent;
             position: absolute;
             top: 0;
@@ -69,14 +79,21 @@
 
         /* Loading spinner animation */
         .loading-spinner {
-            border: 8px solid rgba(255, 255, 255, 0.2);
-            border-top: 8px solid #e50914;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #e50914;
             border-radius: 50%;
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
         }
-
+        @media (min-width: 768px) {
+            .loading-spinner {
+                border: 8px solid rgba(255, 255, 255, 0.2);
+                border-top: 8px solid #e50914;
+                width: 80px;
+                height: 80px;
+            }
+        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -85,11 +102,11 @@
         /* Focus ring for remote navigation */
         [data-focusable]:focus {
             outline: none;
-            box-shadow: 0 0 0 4px #e50914;
+            box-shadow: 0 0 0 3px #e50914;
             transition: box-shadow 0.2s ease-in-out;
             border-radius: 9999px; /* For rounded buttons */
         }
-
+        
         .menu-item.active {
             background-color: rgba(229, 9, 20, 0.5);
         }
@@ -110,8 +127,14 @@
 <body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center overflow-hidden">
 
     <div class="p-4 w-full max-w-7xl">
+        <!-- URL Input and Load Button -->
+        <div class="flex items-center space-x-2 mb-4">
+            <input type="text" id="video-url-input" class="flex-grow p-2 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Enter HLS (.m3u8) video URL here...">
+            <button id="load-video-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200" data-focusable>Load</button>
+        </div>
+
         <!-- Main Player Container -->
-        <div id="video-player-container" class="relative w-full aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl">
+        <div id="video-player-container" class="relative w-full aspect-video bg-black rounded-lg md:rounded-3xl overflow-hidden shadow-2xl">
             
             <!-- The Video Element -->
             <video id="video-player" class="w-full h-full object-contain" preload="auto"></video>
@@ -122,29 +145,29 @@
             </div>
 
             <!-- Pause Details Overlay (Initially hidden) -->
-            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
-                <div class="flex flex-col md:flex-row items-center space-y-8 md:space-y-0 md:space-x-8 max-w-4xl text-center md:text-left">
+            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-4 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+                <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 max-w-4xl text-center md:text-left">
                     <img id="video-thumbnail" class="rounded-xl shadow-lg video-thumbnail" src="https://placehold.co/400x225/e50914/ffffff?text=Video+Thumbnail" alt="Video Thumbnail">
                     <div class="flex-grow">
-                        <h2 id="video-title" class="text-5xl font-bold mb-4 drop-shadow-lg">Movie/Series Title</h2>
-                        <p id="video-description" class="text-xl text-gray-300 leading-relaxed drop-shadow-lg">This is a placeholder description for the video. Here you would see details about the episode or movie.</p>
-                        <p id="video-episode" class="text-lg text-gray-400 mt-2">S1 E1: Episode Title</p>
+                        <h2 id="video-title" class="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">Movie/Series Title</h2>
+                        <p id="video-description" class="text-sm md:text-xl text-gray-300 leading-relaxed drop-shadow-lg">This is a placeholder description for the video. Here you would see details about the episode or movie.</p>
+                        <p id="video-episode" class="text-xs md:text-lg text-gray-400 mt-2">S1 E1: Episode Title</p>
                     </div>
                 </div>
             </div>
 
             <!-- End of Video "Next Episode" Overlay -->
-            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
-                <h3 class="text-4xl font-bold mb-6 drop-shadow-lg">Video Finished!</h3>
-                <button id="next-episode-btn" class="px-10 py-6 bg-red-600 text-white font-bold text-2xl rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg focus:ring-4 focus:ring-white" data-focusable>
+            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+                <h3 class="text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">Video Finished!</h3>
+                <button id="next-episode-btn" class="px-6 py-3 md:px-10 md:py-6 bg-red-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg focus:ring-4 focus:ring-white" data-focusable>
                     Play Again
                 </button>
             </div>
 
             <!-- Video Controls Container -->
-            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
+            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
                 <!-- Progress Bar -->
-                <div class="progress-bar-container mb-6">
+                <div class="progress-bar-container mb-4 md:mb-6">
                     <div id="progress-buffered" class="progress-buffered"></div>
                     <div id="progress-played" class="progress-played"></div>
                     <input type="range" id="progress-bar" class="w-full h-full absolute" value="0" min="0" max="100">
@@ -153,59 +176,59 @@
                 <!-- Control Buttons and Timestamps -->
                 <div class="flex items-center justify-between">
                     <!-- Left-side Controls (Play/Pause, Volume, Time) -->
-                    <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-3 md:space-x-6">
                         <!-- Play/Pause Button -->
-                        <button id="play-pause-btn" class="text-4xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                        <button id="play-pause-btn" class="text-2xl md:text-4xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-play"></i>
                         </button>
                         <!-- Backward 5s Button -->
-                        <button id="backward-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                        <button id="backward-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-backward"></i>
                         </button>
                         <!-- Forward 15s Button -->
-                        <button id="forward-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                        <button id="forward-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-forward"></i>
                         </button>
                         <!-- Volume Controls with popup -->
                         <div class="relative group">
-                            <button id="volume-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                            <button id="volume-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                                 <i class="fas fa-volume-up"></i>
                             </button>
                             <!-- Volume Slider Popup -->
-                            <div class="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center justify-center p-4 bg-gray-800 rounded-xl shadow-lg">
-                                <input type="range" id="volume-slider" class="h-24 w-2 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1" style="writing-mode: bt-lr;">
+                            <div class="absolute bottom-full mb-2 md:mb-4 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center justify-center p-2 md:p-4 bg-gray-800 rounded-lg md:rounded-xl shadow-lg">
+                                <input type="range" id="volume-slider" class="h-20 w-2 md:h-24 md:w-2 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1" style="writing-mode: bt-lr;">
                             </div>
                         </div>
                         <!-- Time Display -->
-                        <span id="time-display" class="text-xl font-medium text-gray-300">00:00 / 00:00</span>
+                        <span id="time-display" class="text-sm md:text-xl font-medium text-gray-300">00:00 / 00:00</span>
                     </div>
                     
                     <!-- Right-side Controls (Settings, Fullscreen) -->
-                    <div class="flex items-center space-x-6">
+                    <div class="flex items-center space-x-3 md:space-x-6">
                         <!-- Aspect Ratio Buttons -->
-                        <button id="fit-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable><i class="fas fa-arrows-alt"></i></button>
-                        <button id="crop-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable><i class="fas fa-crop-alt"></i></button>
+                        <button id="fit-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable><i class="fas fa-arrows-alt"></i></button>
+                        <button id="crop-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable><i class="fas fa-crop-alt"></i></button>
 
                         <!-- Settings Menu Trigger -->
                         <div class="relative">
-                            <button id="settings-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                            <button id="settings-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                                 <i class="fas fa-cog"></i>
                             </button>
                             <!-- Settings Popup -->
-                            <div id="settings-menu" class="absolute bottom-full right-0 mb-4 w-80 bg-gray-900 rounded-xl shadow-2xl overflow-hidden hidden z-20">
+                            <div id="settings-menu" class="absolute bottom-full right-0 mb-2 md:mb-4 w-52 md:w-80 bg-gray-900 rounded-lg md:rounded-xl shadow-2xl overflow-hidden hidden z-20">
                                 <!-- Main Settings View -->
                                 <div id="main-settings-view" class="p-4 transition-transform duration-300">
-                                    <h4 class="text-gray-400 text-lg font-semibold mb-2">Settings</h4>
+                                    <h4 class="text-gray-400 text-sm md:text-lg font-semibold mb-2">Settings</h4>
                                     <ul class="space-y-1">
-                                        <li class="menu-item text-lg p-2 rounded cursor-pointer" data-menu="quality-menu" data-focusable>
+                                        <li class="menu-item text-sm md:text-lg p-2 rounded cursor-pointer" data-menu="quality-menu" data-focusable>
                                             <span>Video Quality</span>
                                             <i class="fas fa-chevron-right"></i>
                                         </li>
-                                        <li class="menu-item text-lg p-2 rounded cursor-pointer" data-menu="audio-menu" data-focusable>
+                                        <li class="menu-item text-sm md:text-lg p-2 rounded cursor-pointer" data-menu="audio-menu" data-focusable>
                                             <span>Audio Tracks</span>
                                             <i class="fas fa-chevron-right"></i>
                                         </li>
-                                        <li class="menu-item text-lg p-2 rounded cursor-pointer" data-menu="subtitle-menu" data-focusable>
+                                        <li class="menu-item text-sm md:text-lg p-2 rounded cursor-pointer" data-menu="subtitle-menu" data-focusable>
                                             <span>Subtitles</span>
                                             <i class="fas fa-chevron-right"></i>
                                         </li>
@@ -215,29 +238,29 @@
                                 <div id="quality-menu" class="menu-submenu">
                                     <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
                                         <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-lg">Video Quality</span>
+                                        <span class="text-sm md:text-lg">Video Quality</span>
                                     </div>
-                                    <ul id="quality-options" class="space-y-1 text-lg"></ul>
+                                    <ul id="quality-options" class="space-y-1 text-sm md:text-lg"></ul>
                                 </div>
                                 <div id="audio-menu" class="menu-submenu">
                                     <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
                                         <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-lg">Audio Tracks</span>
+                                        <span class="text-sm md:text-lg">Audio Tracks</span>
                                     </div>
-                                    <ul id="audio-options" class="space-y-1 text-lg"></ul>
+                                    <ul id="audio-options" class="space-y-1 text-sm md:text-lg"></ul>
                                 </div>
                                 <div id="subtitle-menu" class="menu-submenu">
                                     <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
                                         <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-lg">Subtitles</span>
+                                        <span class="text-sm md:text-lg">Subtitles</span>
                                     </div>
-                                    <ul id="subtitle-options" class="space-y-1 text-lg"></ul>
+                                    <ul id="subtitle-options" class="space-y-1 text-sm md:text-lg"></ul>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Fullscreen Button -->
-                        <button id="fullscreen-btn" class="text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
+                        <button id="fullscreen-btn" class="text-xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
                             <i class="fas fa-expand"></i>
                         </button>
                     </div>
@@ -282,8 +305,7 @@
         
         let hls; // Declare HLS instance globally
         let controlsTimeout;
-        let focusedIndex = 0;
-
+        
         // --- Core Player Functions ---
         
         function loadVideo(url) {
@@ -326,10 +348,10 @@
         // --- Settings Menu Functions ---
         
         function populateQualityOptions(levels) {
-            qualityOptions.innerHTML = `<li class="menu-item text-lg p-2 rounded cursor-pointer active" data-level="-1" data-focusable><span>Auto</span></li>`;
+            qualityOptions.innerHTML = `<li class="menu-item text-sm md:text-lg p-2 rounded cursor-pointer active" data-level="-1" data-focusable><span>Auto</span></li>`;
             levels.forEach((level, index) => {
                 const li = document.createElement('li');
-                li.classList.add('menu-item', 'text-lg', 'p-2', 'rounded', 'cursor-pointer');
+                li.classList.add('menu-item', 'text-sm', 'md:text-lg', 'p-2', 'rounded', 'cursor-pointer');
                 li.textContent = `${level.height}p`;
                 li.dataset.level = index;
                 li.dataset.focusable = true;
@@ -342,7 +364,7 @@
             if (tracks && tracks.length > 0) {
                 tracks.forEach((track, index) => {
                     const li = document.createElement('li');
-                    li.classList.add('menu-item', 'text-lg', 'p-2', 'rounded', 'cursor-pointer');
+                    li.classList.add('menu-item', 'text-sm', 'md:text-lg', 'p-2', 'rounded', 'cursor-pointer');
                     li.textContent = track.name;
                     li.dataset.audioIndex = index;
                     li.dataset.focusable = true;
@@ -354,11 +376,11 @@
         }
         
         function populateSubtitleOptions(tracks) {
-            subtitleOptions.innerHTML = `<li class="menu-item text-lg p-2 rounded cursor-pointer active" data-subtitle-index="-1" data-focusable><span>Off</span></li>`;
+            subtitleOptions.innerHTML = `<li class="menu-item text-sm md:text-lg p-2 rounded cursor-pointer active" data-subtitle-index="-1" data-focusable><span>Off</span></li>`;
             if (tracks && tracks.length > 0) {
                 tracks.forEach((track, index) => {
                     const li = document.createElement('li');
-                    li.classList.add('menu-item', 'text-lg', 'p-2', 'rounded', 'cursor-pointer');
+                    li.classList.add('menu-item', 'text-sm', 'md:text-lg', 'p-2', 'rounded', 'cursor-pointer');
                     li.textContent = track.name;
                     li.dataset.subtitleIndex = index;
                     li.dataset.focusable = true;
@@ -404,7 +426,6 @@
         }
         
         function showCustomMessage(message) {
-            // A simple modal to replace the alert function
             const modal = document.createElement('div');
             modal.classList.add('fixed', 'inset-0', 'bg-black/70', 'flex', 'items-center', 'justify-center', 'z-50');
             modal.innerHTML = `
@@ -630,13 +651,11 @@
 
             if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                // Move focus to the right
                 if (currentFocusIndex < focusableElements.length - 1) {
                     focusableElements[currentFocusIndex + 1].focus();
                 }
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                // Move focus to the left
                 if (currentFocusIndex > 0) {
                     focusableElements[currentFocusIndex - 1].focus();
                 }
