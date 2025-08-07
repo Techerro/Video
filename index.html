@@ -191,7 +191,7 @@
         .episodes-overlay.active {
             transform: translateX(0);
         }
-
+        
         .episode-card {
             display: flex;
             align-items: center;
@@ -224,7 +224,41 @@
         .thumbnail-overlay.active {
             opacity: 1;
         }
+        .episode-card, .season-card {
+            animation: fadeIn 0.5s ease-in-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .season-list-item, .episode-list-item {
+            transition: all 0.3s ease-in-out;
+        }
         
+        /* Custom scrollbar for better visuals */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #e50914 #4a5568;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #4a5568;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #e50914;
+            border-radius: 10px;
+            border: 2px solid #4a5568;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center overflow-hidden">
@@ -276,7 +310,7 @@
                         <h3 class="text-xl md:text-3xl font-bold ml-4">Episodes</h3>
                     </div>
                     <!-- Season Selector -->
-                    <div id="season-list-container" class="space-y-4 flex-grow overflow-y-auto">
+                    <div id="season-list-container" class="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
                         <!-- Seasons will be populated here -->
                     </div>
                 </div>
@@ -288,7 +322,7 @@
                         </button>
                         <h3 id="episodes-list-title" class="text-xl md:text-3xl font-bold ml-4">Season 1</h3>
                     </div>
-                    <div id="episodes-list-container" class="space-y-4 flex-grow overflow-y-auto">
+                    <div id="episodes-list-container" class="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
                         <!-- Episodes will be populated here -->
                     </div>
                 </div>
@@ -650,9 +684,10 @@
         
         function generateSeasonList() {
             seasonListContainer.innerHTML = '';
-            seriesData.seasons.forEach(season => {
+            seriesData.seasons.forEach((season, index) => {
                 const seasonCard = document.createElement('div');
-                seasonCard.classList.add('p-4', 'bg-gray-800', 'rounded-lg', 'cursor-pointer', 'flex', 'justify-between', 'items-center', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                seasonCard.classList.add('season-card', 'p-4', 'bg-gray-800', 'rounded-lg', 'cursor-pointer', 'flex', 'justify-between', 'items-center', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                seasonCard.style.animationDelay = `${index * 0.1}s`;
                 seasonCard.innerHTML = `
                     <span class="text-lg font-semibold">Season ${season.season}</span>
                     <i class="fas fa-chevron-right text-gray-400"></i>
@@ -672,9 +707,10 @@
             episodesListTitle.textContent = `Season ${season.season}`;
             episodesListContainer.innerHTML = '';
             
-            season.episodes.forEach(episode => {
+            season.episodes.forEach((episode, index) => {
                 const episodeCard = document.createElement('div');
                 episodeCard.classList.add('episode-card');
+                episodeCard.style.animationDelay = `${index * 0.1}s`;
                 episodeCard.innerHTML = `
                     <img src="${episode.thumbnail}" alt="Episode ${episode.id} thumbnail" class="rounded-lg">
                     <div class="flex-grow">
