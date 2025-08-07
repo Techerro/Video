@@ -156,16 +156,58 @@
         }
 
         /* Video Details Overlay Styling */
-        .video-thumbnail {
-            width: 100%;
-            max-width: 200px; /* Mobile size */
-            height: auto;
-            object-fit: cover;
+        .video-details-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: opacity 0.7s ease-in-out;
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
         }
-        @media (min-width: 768px) {
-            .video-thumbnail {
-                max-width: 300px; /* Desktop/TV size */
-            }
+        .video-details-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .episodes-overlay {
+            background-color: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: transform 0.5s ease-in-out;
+            transform: translateX(100%);
+            position: absolute;
+            inset: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .episodes-overlay.active {
+            transform: translateX(0);
+        }
+
+        .episode-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        .episode-card:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .episode-card img {
+            width: 120px;
+            height: 67.5px;
+            object-fit: cover;
+            border-radius: 0.25rem;
         }
         
     </style>
@@ -191,16 +233,49 @@
             </div>
 
             <!-- Pause Details Overlay (Initially hidden) -->
-            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-6 md:p-12 bg-black/70 transition-opacity duration-700 opacity-0 pointer-events-none">
-                <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 max-w-4xl text-center md:text-left">
-                    <img id="video-thumbnail" class="rounded-lg shadow-lg video-thumbnail" src="https://placehold.co/400x225/e50914/ffffff?text=Video+Thumbnail" alt="Video Thumbnail">
-                    <div class="flex-grow">
-                        <h2 id="video-title" class="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">Movie/Series Title</h2>
-                        <p id="video-description" class="text-sm md:text-xl text-gray-300 leading-relaxed drop-shadow-lg">This is a placeholder description for the video. Here you would see details about the episode or movie.</p>
-                        <p id="video-episode" class="text-xs md:text-lg text-gray-400 mt-2">S1 E1: Episode Title</p>
+            <div id="pause-details-overlay" class="video-details-overlay hidden">
+                <div class="flex flex-col justify-center items-center p-6 md:p-12 w-full max-w-4xl">
+                    <h2 id="video-title" class="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg text-center">Stranger Things</h2>
+                    <p id="video-description" class="text-sm md:text-xl text-gray-300 leading-relaxed drop-shadow-lg text-center max-w-2xl mb-6">This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.</p>
+                    <div class="flex space-x-4">
+                        <button id="overlay-play-btn" class="px-6 py-3 md:px-10 md:py-6 bg-white text-black font-bold text-lg md:text-2xl rounded-full hover:bg-gray-300 transition-colors duration-200 shadow-lg" data-focusable>
+                            <i class="fas fa-play mr-2"></i> Play
+                        </button>
+                        <button id="all-episodes-btn" class="px-6 py-3 md:px-10 md:py-6 bg-gray-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-gray-500 transition-colors duration-200 shadow-lg" data-focusable>
+                            All Episodes
+                        </button>
                     </div>
                 </div>
             </div>
+            
+            <!-- All Episodes Overlay (Initially hidden) -->
+            <div id="episodes-overlay" class="episodes-overlay hidden">
+                <div id="episodes-main-view" class="w-full h-full flex flex-col transition-transform duration-500">
+                    <div class="flex items-center mb-4">
+                        <button id="episodes-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h3 class="text-xl md:text-3xl font-bold ml-4">Episodes</h3>
+                    </div>
+                    <!-- Season Selector -->
+                    <div id="season-list-container" class="space-y-4">
+                        <!-- Seasons will be populated here -->
+                    </div>
+                </div>
+
+                <div id="episodes-list-view" class="w-full h-full flex-shrink-0 flex flex-col transition-transform duration-500 transform translate-x-full absolute top-0 left-0 p-4">
+                    <div class="flex items-center mb-4">
+                        <button id="episodes-list-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <h3 id="episodes-list-title" class="text-xl md:text-3xl font-bold ml-4">Season 1</h3>
+                    </div>
+                    <div id="episodes-list-container" class="space-y-4 flex-grow overflow-y-auto">
+                        <!-- Episodes will be populated here -->
+                    </div>
+                </div>
+            </div>
+
 
             <!-- End of Video "Next Episode" Overlay -->
             <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
@@ -369,6 +444,16 @@
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
         const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
+        const overlayPlayBtn = document.getElementById('overlay-play-btn');
+        const allEpisodesBtn = document.getElementById('all-episodes-btn');
+        const episodesOverlay = document.getElementById('episodes-overlay');
+        const episodesBackBtn = document.getElementById('episodes-back-btn');
+        const episodesListBackBtn = document.getElementById('episodes-list-back-btn');
+        const seasonListContainer = document.getElementById('season-list-container');
+        const episodesListView = document.getElementById('episodes-list-view');
+        const episodesListContainer = document.getElementById('episodes-list-container');
+        const episodesListTitle = document.getElementById('episodes-list-title');
+
         const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
         const nextEpisodeBtn = document.getElementById('next-episode-btn');
         const videoUrlInput = document.getElementById('video-url-input');
@@ -391,6 +476,41 @@
         let hls; // Declare HLS instance globally
         let controlsTimeout;
         
+        // --- Mock Data for Episodes ---
+        const seriesData = {
+            title: "Stranger Things",
+            description: "This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.",
+            seasons: [
+                {
+                    season: 1,
+                    episodes: [
+                        { id: 1, title: "The Vanishing of Will Byers", duration: "49 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E1" },
+                        { id: 2, title: "The Weirdo on Maple Street", duration: "55 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E2" },
+                        { id: 3, title: "Holly, Jolly", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E3" },
+                        { id: 4, title: "The Body", duration: "50 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E4" },
+                    ]
+                },
+                {
+                    season: 2,
+                    episodes: [
+                        { id: 1, title: "Chapter One: MADMAX", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E1" },
+                        { id: 2, title: "Chapter Two: Trick or Treat, Freak", duration: "56 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E2" },
+                        { id: 3, title: "Chapter Three: The Pollywog", duration: "57 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E3" },
+                        { id: 4, title: "Chapter Four: Will the Wise", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E4" },
+                    ]
+                },
+                {
+                    season: 3,
+                    episodes: [
+                        { id: 1, title: "Chapter One: Suzie, Do You Copy?", duration: "50 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E1" },
+                        { id: 2, title: "Chapter Two: The Mall Rats", duration: "58 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E2" },
+                        { id: 3, title: "Chapter Three: The Case of the Missing Lifeguard", duration: "48 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E3" },
+                        { id: 4, title: "Chapter Four: The Sauna Test", duration: "53 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E4" },
+                    ]
+                }
+            ]
+        };
+
         // --- Core Player Functions ---
         
         function loadVideo(url) {
@@ -410,11 +530,10 @@
                     populateQualityOptions(hls.levels);
                     populateAudioOptions(hls.audioTracks);
                     populateSubtitleOptions(hls.subtitleTracks);
-                    // Set default active quality/audio/subtitle
                     updateActiveMenuItem(qualityOptions, hls.currentLevel === -1 ? -1 : hls.currentLevel, 'level');
                     updateActiveMenuItem(audioOptions, hls.audioTrack, 'audioIndex');
                     updateActiveMenuItem(subtitleOptions, hls.subtitleTrack, 'subtitleIndex');
-                    updateActiveMenuItem(aspectRatioOptions, video.style.objectFit || 'contain', 'aspectRatio'); // Default to contain
+                    updateActiveMenuItem(aspectRatioOptions, video.style.objectFit || 'contain', 'aspectRatio');
                     video.play();
                 });
 
@@ -548,6 +667,55 @@
             `;
             document.body.appendChild(modal);
         }
+        
+        function generateSeasonList() {
+            seasonListContainer.innerHTML = '';
+            seriesData.seasons.forEach(season => {
+                const seasonCard = document.createElement('div');
+                seasonCard.classList.add('p-4', 'bg-gray-800', 'rounded-lg', 'cursor-pointer', 'flex', 'justify-between', 'items-center', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
+                seasonCard.innerHTML = `
+                    <span class="text-lg font-semibold">Season ${season.season}</span>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                `;
+                seasonCard.dataset.season = season.season;
+                seasonCard.addEventListener('click', () => {
+                    displayEpisodesForSeason(season.season);
+                });
+                seasonListContainer.appendChild(seasonCard);
+            });
+        }
+
+        function displayEpisodesForSeason(seasonNumber) {
+            const season = seriesData.seasons.find(s => s.season === seasonNumber);
+            if (!season) return;
+
+            episodesListTitle.textContent = `Season ${season.season}`;
+            episodesListContainer.innerHTML = '';
+            
+            season.episodes.forEach(episode => {
+                const episodeCard = document.createElement('div');
+                episodeCard.classList.add('episode-card');
+                episodeCard.innerHTML = `
+                    <img src="${episode.thumbnail}" alt="Episode ${episode.id} thumbnail" class="rounded-lg">
+                    <div class="flex-grow">
+                        <p class="font-semibold text-lg">E${episode.id}: ${episode.title}</p>
+                        <p class="text-gray-400 text-sm">${episode.duration}</p>
+                    </div>
+                `;
+                // Add click event for playing the episode (currently just a log)
+                episodeCard.addEventListener('click', () => {
+                    console.log(`Playing S${season.season} E${episode.id}`);
+                    // In a real app, you would load the video URL for this episode here.
+                    video.play();
+                });
+                episodesListContainer.appendChild(episodeCard);
+            });
+            
+            // Animate the transition to the episode list view
+            episodesListView.classList.remove('translate-x-full');
+            episodesListView.classList.add('translate-x-0');
+        }
+
 
         // --- Event Listeners ---
 
@@ -583,6 +751,32 @@
             }
         });
         
+        // Play button on pause overlay
+        overlayPlayBtn.addEventListener('click', () => {
+            video.play();
+        });
+
+        // "All Episodes" button on pause overlay
+        allEpisodesBtn.addEventListener('click', () => {
+            pauseDetailsOverlay.classList.add('hidden');
+            episodesOverlay.classList.remove('hidden');
+            episodesOverlay.classList.add('active');
+            generateSeasonList(); // Generate season list when button is clicked
+        });
+
+        // Back button from season list to pause screen
+        episodesBackBtn.addEventListener('click', () => {
+            episodesOverlay.classList.remove('active');
+            episodesOverlay.classList.add('hidden');
+            pauseDetailsOverlay.classList.remove('hidden');
+        });
+
+        // Back button from episode list to season list
+        episodesListBackBtn.addEventListener('click', () => {
+            episodesListView.classList.add('translate-x-full');
+            episodesListView.classList.remove('translate-x-0');
+        });
+
         // Backward 10s button
         backwardBtn.addEventListener('click', () => {
             video.currentTime -= 10;
@@ -596,9 +790,8 @@
         // Video playback events
         video.addEventListener('play', () => {
             updatePlayerUI();
-            // Pause overlay fades out slowly
-            pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
-            pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
+            pauseDetailsOverlay.classList.add('hidden');
+            episodesOverlay.classList.add('hidden');
             loadingOverlay.classList.add('hidden');
             // Attempt to lock screen orientation on mobile devices
             if (screen.orientation && screen.orientation.lock) {
@@ -610,9 +803,10 @@
 
         video.addEventListener('pause', () => {
             updatePlayerUI();
-            // Pause overlay fades in slowly
-            pauseDetailsOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
+            pauseDetailsOverlay.classList.remove('hidden');
+            // Hide episodes overlay if it was open
+            episodesOverlay.classList.add('hidden');
+            episodesListView.classList.add('translate-x-full');
         });
 
         video.addEventListener('timeupdate', () => updatePlayerUI());
@@ -639,7 +833,6 @@
         settingsBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             settingsMenu.classList.toggle('hidden');
-            // Ensure main settings view is active when opening
             mainSettingsView.style.transform = 'translateX(0)';
             document.querySelectorAll('.menu-submenu').forEach(menu => menu.classList.remove('active'));
         });
