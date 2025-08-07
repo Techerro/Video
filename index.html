@@ -136,9 +136,6 @@
         .menu-item:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
-        .menu-item.active {
-            color: #e50914; /* Red text for active item */
-        }
 
         /* Submenu sliding effect */
         .menu-submenu {
@@ -193,13 +190,8 @@
                 <div class="loading-spinner"></div>
             </div>
 
-            <!-- Single-click Play/Pause Icon Overlay -->
-            <div id="click-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
-                <i id="click-icon" class="fas fa-play text-white text-5xl md:text-8xl drop-shadow-lg"></i>
-            </div>
-
             <!-- Pause Details Overlay (Initially hidden) -->
-            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-6 md:p-12 bg-black/70 transition-opacity duration-700 opacity-0 pointer-events-none">
                 <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8 max-w-4xl text-center md:text-left">
                     <img id="video-thumbnail" class="rounded-lg shadow-lg video-thumbnail" src="https://placehold.co/400x225/e50914/ffffff?text=Video+Thumbnail" alt="Video Thumbnail">
                     <div class="flex-grow">
@@ -376,8 +368,6 @@
         const volumeSlider = document.getElementById('volume-slider');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
-        const clickOverlay = document.getElementById('click-overlay');
-        const clickIcon = document.getElementById('click-icon');
         const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
         const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
         const nextEpisodeBtn = document.getElementById('next-episode-btn');
@@ -592,18 +582,6 @@
                 video.pause();
             }
         });
-
-        // Single-click on video to toggle play/pause
-        videoPlayerContainer.addEventListener('click', (e) => {
-            // Check if the click target is the video element itself and not a control button
-            if (e.target === video || e.target === videoPlayerContainer) {
-                if (video.paused) {
-                    video.play();
-                } else {
-                    video.pause();
-                }
-            }
-        });
         
         // Backward 10s button
         backwardBtn.addEventListener('click', () => {
@@ -615,16 +593,13 @@
             video.currentTime += 10;
         });
 
-
         // Video playback events
         video.addEventListener('play', () => {
             updatePlayerUI();
+            // Pause overlay fades out slowly
             pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
             pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
             loadingOverlay.classList.add('hidden');
-            // Show the fade-in play/pause icon
-            clickIcon.className = 'fas fa-play text-white text-5xl md:text-8xl drop-shadow-lg';
-            clickOverlay.classList.remove('opacity-100');
             // Attempt to lock screen orientation on mobile devices
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(e => {
@@ -635,15 +610,9 @@
 
         video.addEventListener('pause', () => {
             updatePlayerUI();
+            // Pause overlay fades in slowly
             pauseDetailsOverlay.classList.remove('opacity-0', 'pointer-events-none');
             pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
-            // Show the fade-out play/pause icon
-            clickIcon.className = 'fas fa-pause text-white text-5xl md:text-8xl drop-shadow-lg';
-            clickOverlay.classList.remove('opacity-0');
-            clickOverlay.classList.add('opacity-100');
-            setTimeout(() => {
-                clickOverlay.classList.remove('opacity-100');
-            }, 500);
         });
 
         video.addEventListener('timeupdate', () => updatePlayerUI());
