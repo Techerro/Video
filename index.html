@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Netflix-Style Video Player</title>
+    <title>Advanced Video Player</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- hls.js library for adaptive streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7"></script>
     <style>
         /* Custom styles for the range input slider */
         input[type="range"]::-webkit-slider-thumb {
@@ -64,83 +66,128 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        
+        /* Video object-fit modes */
+        .object-contain { object-fit: contain; }
+        .object-cover { object-fit: cover; }
+        .object-fill { object-fit: fill; }
+        
+        /* Vertical volume slider */
+        #volume-slider-vertical {
+            -webkit-appearance: slider-vertical;
+            writing-mode: bt-lr;
+            height: 100px;
+            width: 10px;
+            margin: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center">
 
-    <!-- Main Player Container -->
-    <div id="video-player-container" class="relative w-full max-w-5xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
-        
-        <!-- The Video Element -->
-        <!-- The preload attribute is set to 'auto' to ensure the browser loads metadata and a portion of the video for smooth playback -->
-        <video id="video-player" class="w-full h-full" preload="auto">
-            <!-- Using a public domain video from Big Buck Bunny to demonstrate functionality -->
-            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-
-        <!-- Loading Spinner Overlay -->
-        <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
-            <div class="loading-spinner"></div>
+    <div class="p-4 w-full max-w-5xl">
+        <!-- URL Input and Load Button -->
+        <div class="flex items-center space-x-2 mb-4">
+            <input type="text" id="video-url-input" class="flex-grow p-2 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Enter HLS (.m3u8) video URL here...">
+            <button id="load-video-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200">Load</button>
         </div>
 
-        <!-- Pause Details Overlay (Initially hidden) -->
-        <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
-            <div class="max-w-2xl text-center">
-                <h2 id="video-title" class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Big Buck Bunny</h2>
-                <p id="video-description" class="text-lg text-gray-300 md:text-xl leading-relaxed drop-shadow-lg">A large rabbit, Big Buck Bunny, is challenged by three small bullies, a flying squirrel, a weasel, and a chinchilla, and devises a plan to get even.</p>
-                <!-- This could be a "More Info" button or similar -->
-                <button class="mt-8 px-6 py-3 bg-white text-gray-900 font-bold text-lg rounded-full hover:bg-gray-200 transition-colors duration-200">
-                    More Info
+        <!-- Main Player Container -->
+        <div id="video-player-container" class="relative w-full aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+            
+            <!-- The Video Element -->
+            <video id="video-player" class="w-full h-full object-contain" preload="auto"></video>
+
+            <!-- Loading Spinner Overlay -->
+            <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- Pause Details Overlay (Initially hidden) -->
+            <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+                <div class="max-w-2xl text-center">
+                    <h2 id="video-title" class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Video Paused</h2>
+                    <p id="video-description" class="text-lg text-gray-300 md:text-xl leading-relaxed drop-shadow-lg">Details about the current video will appear here when it's paused. Load a video to get started.</p>
+                </div>
+            </div>
+
+            <!-- End of Video "Next Episode" Overlay -->
+            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+                <h3 class="text-3xl font-bold mb-4 drop-shadow-lg">Video Finished!</h3>
+                <button id="next-episode-btn" class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg">
+                    Play Again
                 </button>
             </div>
-        </div>
 
-        <!-- End of Video "Next Episode" Overlay -->
-        <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
-            <h3 class="text-3xl font-bold mb-4 drop-shadow-lg">Episode Finished!</h3>
-            <p class="text-lg text-gray-300 mb-6 drop-shadow-lg">Ready for the next one?</p>
-            <button id="next-episode-btn" class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg">
-                Play Next Episode
-            </button>
-        </div>
-
-        <!-- Video Controls Container -->
-        <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
-            <!-- Progress Bar -->
-            <div class="relative mb-2">
-                <input type="range" id="progress-bar" class="w-full h-1 bg-red-600 rounded-full" value="0" min="0" max="100">
-            </div>
-            
-            <!-- Control Buttons and Timestamps -->
-            <div class="flex items-center justify-between">
-                <!-- Left-side Controls (Play/Pause, Volume, Time) -->
-                <div class="flex items-center space-x-4">
-                    <!-- Play/Pause Button -->
-                    <button id="play-pause-btn" class="text-2xl text-white hover:text-gray-300 transition-colors duration-200">
-                        <i class="fas fa-play"></i>
-                    </button>
-                    <!-- Volume Controls -->
-                    <div class="flex items-center space-x-2">
-                        <button id="mute-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                        <input type="range" id="volume-slider" class="w-24 h-1 bg-gray-600 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1">
-                    </div>
-                    <!-- Time Display -->
-                    <span id="time-display" class="text-sm font-medium text-gray-300">00:00 / 00:00</span>
+            <!-- Video Controls Container -->
+            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
+                <!-- Progress Bar -->
+                <div class="relative mb-2">
+                    <input type="range" id="progress-bar" class="w-full h-1 bg-red-600 rounded-full" value="0" min="0" max="100">
                 </div>
                 
-                <!-- Right-side Controls (Settings, Fullscreen) -->
-                <div class="flex items-center space-x-4">
-                    <!-- Settings Button (Placeholder) -->
-                    <button id="settings-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200 hidden">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <!-- Fullscreen Button -->
-                    <button id="fullscreen-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
-                        <i class="fas fa-expand"></i>
-                    </button>
+                <!-- Control Buttons and Timestamps -->
+                <div class="flex items-center justify-between">
+                    <!-- Left-side Controls (Play/Pause, Volume, Time) -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Play/Pause Button -->
+                        <button id="play-pause-btn" class="text-2xl text-white hover:text-gray-300 transition-colors duration-200">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <!-- Volume Controls with popup -->
+                        <div class="relative group">
+                            <button id="volume-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <!-- Volume Slider Popup -->
+                            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center justify-center p-4 bg-gray-800 rounded-lg shadow-lg">
+                                <input type="range" id="volume-slider" class="w-24 h-1 bg-gray-600 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1">
+                            </div>
+                        </div>
+                        <!-- Time Display -->
+                        <span id="time-display" class="text-sm font-medium text-gray-300">00:00 / 00:00</span>
+                    </div>
+                    
+                    <!-- Right-side Controls (Settings, Fullscreen) -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Settings Menu (Quality and Audio) -->
+                        <div class="relative group">
+                            <button id="settings-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <!-- Settings Popup -->
+                            <div class="absolute bottom-full mb-2 right-0 hidden group-hover:block p-4 bg-gray-800 rounded-lg shadow-lg">
+                                <div class="mb-4">
+                                    <h4 class="text-gray-400 text-sm font-semibold mb-2">Video Quality</h4>
+                                    <ul id="quality-options" class="space-y-1 text-sm">
+                                        <!-- Quality options will be populated here -->
+                                        <li class="cursor-pointer hover:bg-gray-700 p-1 rounded">Auto</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-gray-400 text-sm font-semibold mb-2">Audio Tracks</h4>
+                                    <ul id="audio-options" class="space-y-1 text-sm">
+                                        <!-- Audio tracks will be populated here -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fullscreen Modes -->
+                        <div class="relative group">
+                            <button id="fullscreen-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                             <!-- Fullscreen Modes Popup -->
+                            <div class="absolute bottom-full mb-2 right-0 hidden group-hover:block p-4 bg-gray-800 rounded-lg shadow-lg">
+                                <h4 class="text-gray-400 text-sm font-semibold mb-2">Fullscreen Mode</h4>
+                                <ul class="space-y-1 text-sm">
+                                    <li id="fit-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Fit (Contain)</li>
+                                    <li id="crop-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Crop (Cover)</li>
+                                    <li id="fill-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Fill (Stretch)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -154,20 +201,127 @@
         const playPauseBtn = document.getElementById('play-pause-btn');
         const progressBar = document.getElementById('progress-bar');
         const timeDisplay = document.getElementById('time-display');
+        const volumeBtn = document.getElementById('volume-btn');
         const volumeSlider = document.getElementById('volume-slider');
-        const muteBtn = document.getElementById('mute-btn');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const loadingOverlay = document.getElementById('loading-overlay');
         const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
         const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
         const nextEpisodeBtn = document.getElementById('next-episode-btn');
-
-        // State variables
-        let isMuted = false;
-        let lastVolume = 1;
+        const videoUrlInput = document.getElementById('video-url-input');
+        const loadVideoBtn = document.getElementById('load-video-btn');
+        const qualityOptions = document.getElementById('quality-options');
+        const audioOptions = document.getElementById('audio-options');
+        const fitBtn = document.getElementById('fit-btn');
+        const cropBtn = document.getElementById('crop-btn');
+        const fillBtn = document.getElementById('fill-btn');
+        
+        let hls; // Declare HLS instance globally
         let controlsTimeout;
 
-        // Function to format time in MM:SS format
+        // --- Core Player Functions ---
+        
+        function loadVideo(url) {
+            // Clean up previous HLS instance if it exists
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+
+            if (Hls.isSupported() && url) {
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log("HLS Manifest loaded, starting playback...");
+                    // Populate quality levels
+                    updateQualityOptions(hls.levels);
+                    // Populate audio tracks
+                    updateAudioOptions(hls.audioTracks);
+                    video.play();
+                });
+
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    console.error('HLS Error:', data);
+                    if (data.fatal) {
+                        alert(`Fatal HLS error: ${data.details}. Please try another video URL.`);
+                        // Try to recover from the error
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // For native HLS support on iOS/Safari
+                video.src = url;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            } else {
+                alert('Your browser does not support HLS streaming.');
+            }
+        }
+
+        function updateQualityOptions(levels) {
+            qualityOptions.innerHTML = '<li class="cursor-pointer hover:bg-gray-700 p-1 rounded" data-level="-1">Auto</li>'; // Add auto quality option
+            levels.forEach((level, index) => {
+                const li = document.createElement('li');
+                li.classList.add('cursor-pointer', 'hover:bg-gray-700', 'p-1', 'rounded');
+                li.textContent = `${level.height}p`;
+                li.dataset.level = index;
+                qualityOptions.appendChild(li);
+            });
+        }
+        
+        function updateAudioOptions(tracks) {
+            audioOptions.innerHTML = '';
+            tracks.forEach((track, index) => {
+                const li = document.createElement('li');
+                li.classList.add('cursor-pointer', 'hover:bg-gray-700', 'p-1', 'rounded');
+                li.textContent = track.name;
+                li.dataset.audioIndex = index;
+                if (track.id === hls.audioTrack) {
+                    li.classList.add('bg-red-600', 'text-white');
+                }
+                audioOptions.appendChild(li);
+            });
+        }
+        
+        function changeQuality(levelIndex) {
+            hls.currentLevel = parseInt(levelIndex, 10);
+            // Update UI to reflect the selected quality
+            const allOptions = qualityOptions.querySelectorAll('li');
+            allOptions.forEach(option => {
+                option.classList.remove('bg-red-600', 'text-white');
+                if (option.dataset.level === levelIndex.toString()) {
+                    option.classList.add('bg-red-600', 'text-white');
+                }
+            });
+        }
+
+        function changeAudioTrack(trackIndex) {
+            hls.audioTrack = parseInt(trackIndex, 10);
+            // Update UI to reflect the selected track
+            const allOptions = audioOptions.querySelectorAll('li');
+            allOptions.forEach(option => {
+                option.classList.remove('bg-red-600', 'text-white');
+                if (option.dataset.audioIndex === trackIndex.toString()) {
+                    option.classList.add('bg-red-600', 'text-white');
+                }
+            });
+        }
+
+        // --- UI and Event Handlers ---
+
         function formatTime(seconds) {
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = Math.floor(seconds % 60);
@@ -176,7 +330,6 @@
             return `${formattedMinutes}:${formattedSeconds}`;
         }
 
-        // Function to update the video player UI
         function updatePlayerUI() {
             const playIcon = video.paused ? 'fa-play' : 'fa-pause';
             playPauseBtn.querySelector('i').className = `fas ${playIcon}`;
@@ -191,10 +344,24 @@
             }
 
             const volumeIcon = video.muted || video.volume === 0 ? 'fa-volume-mute' : (video.volume > 0.5 ? 'fa-volume-up' : 'fa-volume-down');
-            muteBtn.querySelector('i').className = `fas ${volumeIcon}`;
+            volumeBtn.querySelector('i').className = `fas ${volumeIcon}`;
         }
-
+        
         // --- Event Listeners ---
+
+        // Load video from URL input
+        loadVideoBtn.addEventListener('click', () => {
+            const url = videoUrlInput.value;
+            if (url) {
+                loadVideo(url);
+            }
+        });
+
+        // Load a default video on page load for demonstration
+        window.addEventListener('load', () => {
+            videoUrlInput.value = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
+            loadVideo(videoUrlInput.value);
+        });
 
         // Play/Pause button
         playPauseBtn.addEventListener('click', () => {
@@ -210,6 +377,7 @@
             updatePlayerUI();
             pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
             pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
+            loadingOverlay.classList.add('hidden'); // Ensure loading is hidden on play
         });
 
         video.addEventListener('pause', () => {
@@ -218,7 +386,7 @@
             pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
         });
 
-        // Update progress bar and time display as the video plays
+        // Update progress bar and time display
         video.addEventListener('timeupdate', () => {
             updatePlayerUI();
         });
@@ -251,19 +419,20 @@
             updatePlayerUI();
         });
 
-        // Mute button
-        muteBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            if (isMuted) {
-                lastVolume = video.volume; // Store current volume
-                video.volume = 0;
-                video.muted = true;
-            } else {
-                video.muted = false;
-                video.volume = lastVolume; // Restore previous volume
+        // Quality selection
+        qualityOptions.addEventListener('click', (e) => {
+            const level = e.target.dataset.level;
+            if (level !== undefined) {
+                changeQuality(level);
             }
-            volumeSlider.value = video.volume; // Update the slider
-            updatePlayerUI();
+        });
+        
+        // Audio track selection
+        audioOptions.addEventListener('click', (e) => {
+            const track = e.target.dataset.audioIndex;
+            if (track !== undefined) {
+                changeAudioTrack(track);
+            }
         });
 
         // Fullscreen functionality
@@ -280,6 +449,20 @@
             const fullscreenIcon = document.fullscreenElement ? 'fa-compress' : 'fa-expand';
             fullscreenBtn.querySelector('i').className = `fas ${fullscreenIcon}`;
         });
+        
+        // Fullscreen ratio controls
+        fitBtn.addEventListener('click', () => {
+            video.classList.remove('object-cover', 'object-fill');
+            video.classList.add('object-contain');
+        });
+        cropBtn.addEventListener('click', () => {
+            video.classList.remove('object-contain', 'object-fill');
+            video.classList.add('object-cover');
+        });
+        fillBtn.addEventListener('click', () => {
+            video.classList.remove('object-contain', 'object-cover');
+            video.classList.add('object-fill');
+        });
 
         // Show/hide controls on mouse movement
         videoPlayerContainer.addEventListener('mousemove', () => {
@@ -292,21 +475,6 @@
             }, 3000);
         });
 
-        // Keep controls visible when mouse is over them
-        controls.addEventListener('mouseenter', () => {
-            clearTimeout(controlsTimeout);
-            controls.classList.remove('opacity-0', 'pointer-events-none');
-        });
-
-        // Hide controls after leaving them
-        controls.addEventListener('mouseleave', () => {
-            if (!video.paused) {
-                 controlsTimeout = setTimeout(() => {
-                    controls.classList.add('opacity-0', 'pointer-events-none');
-                }, 3000);
-            }
-        });
-
         // Show Next Episode overlay when video ends
         video.addEventListener('ended', () => {
             nextEpisodeOverlay.classList.remove('opacity-0', 'pointer-events-none');
@@ -315,20 +483,12 @@
             controls.classList.add('opacity-0');
         });
 
-        // Simulate loading the next episode
+        // Reset and play the video again
         nextEpisodeBtn.addEventListener('click', () => {
-            // For this example, we will simply restart the video.
-            // In a real application, you would load a new video source here.
             nextEpisodeOverlay.classList.remove('opacity-100', 'pointer-events-auto');
             nextEpisodeOverlay.classList.add('opacity-0', 'pointer-events-none');
             video.currentTime = 0;
             video.play();
-        });
-
-        // Initial setup
-        window.addEventListener('load', () => {
-            // Wait for the window to load before doing any setup
-            updatePlayerUI();
         });
     </script>
 </body>
