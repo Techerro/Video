@@ -51,38 +51,43 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Fade-in animation for controls */
-        .controls-fade {
-            animation: fade-in 0.5s ease-in-out forwards;
-        }
-        .controls-fade-out {
-            animation: fade-out 1s ease-in-out forwards;
-        }
-        @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes fade-out {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
         /* Video object-fit modes */
         .object-contain { object-fit: contain; }
         .object-cover { object-fit: cover; }
         .object-fill { object-fit: fill; }
         
-        /* Vertical volume slider */
-        #volume-slider-vertical {
-            -webkit-appearance: slider-vertical;
-            writing-mode: bt-lr;
-            height: 100px;
-            width: 10px;
-            margin: 0;
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-submenu {
+            background-color: #1a202c; /* Darker than main menu */
+            position: absolute;
+            top: 0;
+            left: -100%; /* Position off-screen */
+            height: 100%;
+            width: 100%;
+            padding: 1rem;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
+            z-index: 20;
+        }
+
+        .menu-submenu.active {
+            transform: translateX(100%); /* Slide in */
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center">
+<body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center overflow-hidden">
 
     <div class="p-4 w-full max-w-5xl">
         <!-- URL Input and Load Button -->
@@ -149,44 +154,71 @@
                     
                     <!-- Right-side Controls (Settings, Fullscreen) -->
                     <div class="flex items-center space-x-4">
-                        <!-- Settings Menu (Quality and Audio) -->
-                        <div class="relative group">
-                            <button id="settings-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                        <!-- Aspect Ratio Buttons -->
+                        <button id="fit-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200"><i class="fas fa-arrows-alt"></i></button>
+                        <button id="crop-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200"><i class="fas fa-crop-alt"></i></button>
+                        <button id="fill-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200 hidden"><i class="fas fa-expand-alt"></i></button>
+
+                        <!-- Settings Menu Trigger -->
+                        <div class="relative">
+                            <button id="settings-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200 z-30">
                                 <i class="fas fa-cog"></i>
                             </button>
                             <!-- Settings Popup -->
-                            <div class="absolute bottom-full mb-2 right-0 hidden group-hover:block p-4 bg-gray-800 rounded-lg shadow-lg">
-                                <div class="mb-4">
-                                    <h4 class="text-gray-400 text-sm font-semibold mb-2">Video Quality</h4>
-                                    <ul id="quality-options" class="space-y-1 text-sm">
-                                        <!-- Quality options will be populated here -->
-                                        <li class="cursor-pointer hover:bg-gray-700 p-1 rounded">Auto</li>
+                            <div id="settings-menu" class="absolute bottom-full right-0 mb-2 w-64 bg-gray-900 rounded-lg shadow-2xl overflow-hidden hidden z-20">
+                                <!-- Main Settings View -->
+                                <div id="main-settings-view" class="p-4 transition-transform duration-300">
+                                    <h4 class="text-gray-400 text-sm font-semibold mb-2">Settings</h4>
+                                    <ul class="space-y-1">
+                                        <li class="menu-item" data-menu="quality-menu">
+                                            <span>Video Quality</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </li>
+                                        <li class="menu-item" data-menu="audio-menu">
+                                            <span>Audio Tracks</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </li>
+                                        <li class="menu-item" data-menu="subtitle-menu">
+                                            <span>Subtitles</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </li>
                                     </ul>
                                 </div>
-                                <div>
-                                    <h4 class="text-gray-400 text-sm font-semibold mb-2">Audio Tracks</h4>
+                                <!-- Submenus -->
+                                <div id="quality-menu" class="menu-submenu">
+                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer" data-back-btn>
+                                        <i class="fas fa-chevron-left mr-2"></i>
+                                        <span>Video Quality</span>
+                                    </div>
+                                    <ul id="quality-options" class="space-y-1 text-sm">
+                                        <!-- Options populated by JS -->
+                                    </ul>
+                                </div>
+                                <div id="audio-menu" class="menu-submenu">
+                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer" data-back-btn>
+                                        <i class="fas fa-chevron-left mr-2"></i>
+                                        <span>Audio Tracks</span>
+                                    </div>
                                     <ul id="audio-options" class="space-y-1 text-sm">
-                                        <!-- Audio tracks will be populated here -->
+                                        <!-- Options populated by JS -->
+                                    </ul>
+                                </div>
+                                <div id="subtitle-menu" class="menu-submenu">
+                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer" data-back-btn>
+                                        <i class="fas fa-chevron-left mr-2"></i>
+                                        <span>Subtitles</span>
+                                    </div>
+                                    <ul id="subtitle-options" class="space-y-1 text-sm">
+                                        <!-- Options populated by JS -->
                                     </ul>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Fullscreen Modes -->
-                        <div class="relative group">
-                            <button id="fullscreen-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
-                                <i class="fas fa-expand"></i>
-                            </button>
-                             <!-- Fullscreen Modes Popup -->
-                            <div class="absolute bottom-full mb-2 right-0 hidden group-hover:block p-4 bg-gray-800 rounded-lg shadow-lg">
-                                <h4 class="text-gray-400 text-sm font-semibold mb-2">Fullscreen Mode</h4>
-                                <ul class="space-y-1 text-sm">
-                                    <li id="fit-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Fit (Contain)</li>
-                                    <li id="crop-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Crop (Cover)</li>
-                                    <li id="fill-btn" class="cursor-pointer hover:bg-gray-700 p-1 rounded">Fill (Stretch)</li>
-                                </ul>
-                            </div>
-                        </div>
+                        <!-- Fullscreen Button -->
+                        <button id="fullscreen-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                            <i class="fas fa-expand"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -210,8 +242,15 @@
         const nextEpisodeBtn = document.getElementById('next-episode-btn');
         const videoUrlInput = document.getElementById('video-url-input');
         const loadVideoBtn = document.getElementById('load-video-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        const mainSettingsView = document.getElementById('main-settings-view');
+        const qualityMenu = document.getElementById('quality-menu');
+        const audioMenu = document.getElementById('audio-menu');
+        const subtitleMenu = document.getElementById('subtitle-menu');
         const qualityOptions = document.getElementById('quality-options');
         const audioOptions = document.getElementById('audio-options');
+        const subtitleOptions = document.getElementById('subtitle-options');
         const fitBtn = document.getElementById('fit-btn');
         const cropBtn = document.getElementById('crop-btn');
         const fillBtn = document.getElementById('fill-btn');
@@ -222,12 +261,12 @@
         // --- Core Player Functions ---
         
         function loadVideo(url) {
-            // Clean up previous HLS instance if it exists
             if (hls) {
                 hls.destroy();
                 hls = null;
             }
-
+            video.src = '';
+            
             if (Hls.isSupported() && url) {
                 hls = new Hls();
                 hls.loadSource(url);
@@ -235,29 +274,18 @@
 
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
                     console.log("HLS Manifest loaded, starting playback...");
-                    // Populate quality levels
-                    updateQualityOptions(hls.levels);
-                    // Populate audio tracks
-                    updateAudioOptions(hls.audioTracks);
+                    populateQualityOptions(hls.levels);
+                    populateAudioOptions(hls.audioTracks);
+                    populateSubtitleOptions(hls.subtitleTracks);
                     video.play();
                 });
 
                 hls.on(Hls.Events.ERROR, function (event, data) {
                     console.error('HLS Error:', data);
                     if (data.fatal) {
-                        alert(`Fatal HLS error: ${data.details}. Please try another video URL.`);
-                        // Try to recover from the error
-                        switch(data.type) {
-                            case Hls.ErrorTypes.NETWORK_ERROR:
-                                hls.startLoad();
-                                break;
-                            case Hls.ErrorTypes.MEDIA_ERROR:
-                                hls.recoverMediaError();
-                                break;
-                            default:
-                                hls.destroy();
-                                break;
-                        }
+                        // This uses a custom modal since window.alert is not allowed
+                        showCustomMessage(`Fatal HLS error: ${data.details}. Please try another video URL.`);
+                        hls.destroy();
                     }
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -267,57 +295,51 @@
                     video.play();
                 });
             } else {
-                alert('Your browser does not support HLS streaming.');
+                showCustomMessage('Your browser does not support HLS streaming.');
             }
         }
-
-        function updateQualityOptions(levels) {
-            qualityOptions.innerHTML = '<li class="cursor-pointer hover:bg-gray-700 p-1 rounded" data-level="-1">Auto</li>'; // Add auto quality option
+        
+        // --- Settings Menu Functions ---
+        
+        function populateQualityOptions(levels) {
+            qualityOptions.innerHTML = '<li class="menu-item p-1 rounded cursor-pointer" data-level="-1"><span>Auto</span></li>';
             levels.forEach((level, index) => {
                 const li = document.createElement('li');
-                li.classList.add('cursor-pointer', 'hover:bg-gray-700', 'p-1', 'rounded');
+                li.classList.add('menu-item', 'p-1', 'rounded', 'cursor-pointer');
                 li.textContent = `${level.height}p`;
                 li.dataset.level = index;
                 qualityOptions.appendChild(li);
             });
         }
         
-        function updateAudioOptions(tracks) {
+        function populateAudioOptions(tracks) {
             audioOptions.innerHTML = '';
-            tracks.forEach((track, index) => {
-                const li = document.createElement('li');
-                li.classList.add('cursor-pointer', 'hover:bg-gray-700', 'p-1', 'rounded');
-                li.textContent = track.name;
-                li.dataset.audioIndex = index;
-                if (track.id === hls.audioTrack) {
-                    li.classList.add('bg-red-600', 'text-white');
-                }
-                audioOptions.appendChild(li);
-            });
+            if (tracks && tracks.length > 0) {
+                tracks.forEach((track, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('menu-item', 'p-1', 'rounded', 'cursor-pointer');
+                    li.textContent = track.name;
+                    li.dataset.audioIndex = index;
+                    audioOptions.appendChild(li);
+                });
+            } else {
+                audioOptions.innerHTML = '<li class="text-gray-400 p-1">No audio tracks available.</li>';
+            }
         }
         
-        function changeQuality(levelIndex) {
-            hls.currentLevel = parseInt(levelIndex, 10);
-            // Update UI to reflect the selected quality
-            const allOptions = qualityOptions.querySelectorAll('li');
-            allOptions.forEach(option => {
-                option.classList.remove('bg-red-600', 'text-white');
-                if (option.dataset.level === levelIndex.toString()) {
-                    option.classList.add('bg-red-600', 'text-white');
-                }
-            });
-        }
-
-        function changeAudioTrack(trackIndex) {
-            hls.audioTrack = parseInt(trackIndex, 10);
-            // Update UI to reflect the selected track
-            const allOptions = audioOptions.querySelectorAll('li');
-            allOptions.forEach(option => {
-                option.classList.remove('bg-red-600', 'text-white');
-                if (option.dataset.audioIndex === trackIndex.toString()) {
-                    option.classList.add('bg-red-600', 'text-white');
-                }
-            });
+        function populateSubtitleOptions(tracks) {
+            subtitleOptions.innerHTML = '<li class="menu-item p-1 rounded cursor-pointer" data-subtitle-index="-1"><span>Off</span></li>';
+            if (tracks && tracks.length > 0) {
+                tracks.forEach((track, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('menu-item', 'p-1', 'rounded', 'cursor-pointer');
+                    li.textContent = track.name;
+                    li.dataset.subtitleIndex = index;
+                    subtitleOptions.appendChild(li);
+                });
+            } else {
+                subtitleOptions.innerHTML = '<li class="text-gray-400 p-1">No subtitles available.</li>';
+            }
         }
 
         // --- UI and Event Handlers ---
@@ -347,6 +369,18 @@
             volumeBtn.querySelector('i').className = `fas ${volumeIcon}`;
         }
         
+        function showCustomMessage(message) {
+            const modal = document.createElement('div');
+            modal.classList.add('fixed', 'inset-0', 'bg-black/70', 'flex', 'items-center', 'justify-center', 'z-50');
+            modal.innerHTML = `
+                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm text-center">
+                    <p class="text-lg font-bold mb-4">${message}</p>
+                    <button class="px-6 py-2 bg-red-600 rounded-full hover:bg-red-700" onclick="this.closest('.fixed').remove()">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
         // --- Event Listeners ---
 
         // Load video from URL input
@@ -361,6 +395,8 @@
         window.addEventListener('load', () => {
             videoUrlInput.value = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
             loadVideo(videoUrlInput.value);
+            // Ensure the UI is updated immediately after loading
+            updatePlayerUI();
         });
 
         // Play/Pause button
@@ -375,41 +411,32 @@
         // Video playback events
         video.addEventListener('play', () => {
             updatePlayerUI();
-            pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
-            pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
-            loadingOverlay.classList.add('hidden'); // Ensure loading is hidden on play
+            pauseDetailsOverlay.classList.add('hidden');
+            loadingOverlay.classList.add('hidden');
+             // Attempt to lock screen orientation on mobile devices
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(e => {
+                    console.log('Orientation lock failed:', e);
+                });
+            }
         });
 
         video.addEventListener('pause', () => {
             updatePlayerUI();
-            pauseDetailsOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
+            pauseDetailsOverlay.classList.remove('hidden');
         });
 
-        // Update progress bar and time display
-        video.addEventListener('timeupdate', () => {
-            updatePlayerUI();
-        });
-
-        // Show loading spinner when video is buffering
-        video.addEventListener('waiting', () => {
-            loadingOverlay.classList.remove('hidden');
-        });
-
-        // Hide loading spinner when video resumes playing
-        video.addEventListener('playing', () => {
-            loadingOverlay.classList.add('hidden');
-        });
-
-        // Handle video metadata loaded to get duration
-        video.addEventListener('loadedmetadata', () => {
-            updatePlayerUI();
-        });
+        video.addEventListener('timeupdate', () => updatePlayerUI());
+        video.addEventListener('waiting', () => loadingOverlay.classList.remove('hidden'));
+        video.addEventListener('playing', () => loadingOverlay.classList.add('hidden'));
+        video.addEventListener('loadedmetadata', () => updatePlayerUI());
 
         // Seek functionality
         progressBar.addEventListener('input', () => {
-            const newTime = (progressBar.value / 100) * video.duration;
-            video.currentTime = newTime;
+            if (!isNaN(video.duration)) {
+                const newTime = (progressBar.value / 100) * video.duration;
+                video.currentTime = newTime;
+            }
         });
 
         // Volume control
@@ -419,21 +446,71 @@
             updatePlayerUI();
         });
 
+        // Settings Menu logic
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent document click from closing it immediately
+            settingsMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            // Close menu if clicking outside of it
+            if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
+                settingsMenu.classList.add('hidden');
+                // Ensure all submenus are closed when main menu closes
+                document.querySelectorAll('.menu-submenu').forEach(menu => menu.classList.remove('active'));
+            }
+        });
+
+        // Settings menu navigation
+        settingsMenu.addEventListener('click', (e) => {
+            const mainItem = e.target.closest('[data-menu]');
+            const backBtn = e.target.closest('[data-back-btn]');
+
+            if (mainItem) {
+                const menuId = mainItem.dataset.menu;
+                document.getElementById(menuId).classList.add('active');
+            } else if (backBtn) {
+                backBtn.closest('.menu-submenu').classList.remove('active');
+            }
+        });
+
         // Quality selection
         qualityOptions.addEventListener('click', (e) => {
-            const level = e.target.dataset.level;
-            if (level !== undefined) {
-                changeQuality(level);
+            const li = e.target.closest('li');
+            if (li && li.dataset.level) {
+                if (hls) {
+                    hls.currentLevel = parseInt(li.dataset.level, 10);
+                }
+                document.querySelectorAll('#quality-options .bg-red-600').forEach(el => el.classList.remove('bg-red-600', 'text-white'));
+                li.classList.add('bg-red-600', 'text-white');
             }
         });
         
         // Audio track selection
         audioOptions.addEventListener('click', (e) => {
-            const track = e.target.dataset.audioIndex;
-            if (track !== undefined) {
-                changeAudioTrack(track);
+            const li = e.target.closest('li');
+            if (li && li.dataset.audioIndex) {
+                if (hls) {
+                    hls.audioTrack = parseInt(li.dataset.audioIndex, 10);
+                }
+                document.querySelectorAll('#audio-options .bg-red-600').forEach(el => el.classList.remove('bg-red-600', 'text-white'));
+                li.classList.add('bg-red-600', 'text-white');
             }
         });
+
+        // Subtitle track selection
+        subtitleOptions.addEventListener('click', (e) => {
+            const li = e.target.closest('li');
+            if (li && li.dataset.subtitleIndex) {
+                 if (hls) {
+                    const index = parseInt(li.dataset.subtitleIndex, 10);
+                    hls.subtitleTrack = index;
+                }
+                document.querySelectorAll('#subtitle-options .bg-red-600').forEach(el => el.classList.remove('bg-red-600', 'text-white'));
+                li.classList.add('bg-red-600', 'text-white');
+            }
+        });
+
 
         // Fullscreen functionality
         fullscreenBtn.addEventListener('click', () => {
@@ -444,7 +521,6 @@
             }
         });
 
-        // Listen for fullscreen change events to update the button icon
         document.addEventListener('fullscreenchange', () => {
             const fullscreenIcon = document.fullscreenElement ? 'fa-compress' : 'fa-expand';
             fullscreenBtn.querySelector('i').className = `fas ${fullscreenIcon}`;
@@ -473,6 +549,14 @@
                     controls.classList.add('opacity-0', 'pointer-events-none');
                 }
             }, 3000);
+        });
+
+        videoPlayerContainer.addEventListener('mouseleave', () => {
+            if (!video.paused) {
+                 controlsTimeout = setTimeout(() => {
+                    controls.classList.add('opacity-0', 'pointer-events-none');
+                }, 3000);
+            }
         });
 
         // Show Next Episode overlay when video ends
