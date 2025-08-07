@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix-Style Video Player</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom styles for the range input slider */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #e50914;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Custom styles for the range track */
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+        }
+
+        /* Loading spinner animation */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #e50914;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Fade-in animation for controls */
+        .controls-fade {
+            animation: fade-in 0.5s ease-in-out forwards;
+        }
+        .controls-fade-out {
+            animation: fade-out 1s ease-in-out forwards;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center">
+
+    <!-- Main Player Container -->
+    <div id="video-player-container" class="relative w-full max-w-5xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+        
+        <!-- The Video Element -->
+        <!-- The preload attribute is set to 'auto' to ensure the browser loads metadata and a portion of the video for smooth playback -->
+        <video id="video-player" class="w-full h-full" preload="auto">
+            <!-- Using a public domain video from Big Buck Bunny to demonstrate functionality -->
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Loading Spinner Overlay -->
+        <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <!-- Pause Details Overlay (Initially hidden) -->
+        <div id="pause-details-overlay" class="absolute inset-0 flex flex-col justify-center items-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+            <div class="max-w-2xl text-center">
+                <h2 id="video-title" class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Big Buck Bunny</h2>
+                <p id="video-description" class="text-lg text-gray-300 md:text-xl leading-relaxed drop-shadow-lg">A large rabbit, Big Buck Bunny, is challenged by three small bullies, a flying squirrel, a weasel, and a chinchilla, and devises a plan to get even.</p>
+                <!-- This could be a "More Info" button or similar -->
+                <button class="mt-8 px-6 py-3 bg-white text-gray-900 font-bold text-lg rounded-full hover:bg-gray-200 transition-colors duration-200">
+                    More Info
+                </button>
+            </div>
+        </div>
+
+        <!-- End of Video "Next Episode" Overlay -->
+        <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-8 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+            <h3 class="text-3xl font-bold mb-4 drop-shadow-lg">Episode Finished!</h3>
+            <p class="text-lg text-gray-300 mb-6 drop-shadow-lg">Ready for the next one?</p>
+            <button id="next-episode-btn" class="px-8 py-4 bg-red-600 text-white font-bold text-lg rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg">
+                Play Next Episode
+            </button>
+        </div>
+
+        <!-- Video Controls Container -->
+        <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
+            <!-- Progress Bar -->
+            <div class="relative mb-2">
+                <input type="range" id="progress-bar" class="w-full h-1 bg-red-600 rounded-full" value="0" min="0" max="100">
+            </div>
+            
+            <!-- Control Buttons and Timestamps -->
+            <div class="flex items-center justify-between">
+                <!-- Left-side Controls (Play/Pause, Volume, Time) -->
+                <div class="flex items-center space-x-4">
+                    <!-- Play/Pause Button -->
+                    <button id="play-pause-btn" class="text-2xl text-white hover:text-gray-300 transition-colors duration-200">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <!-- Volume Controls -->
+                    <div class="flex items-center space-x-2">
+                        <button id="mute-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" id="volume-slider" class="w-24 h-1 bg-gray-600 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1">
+                    </div>
+                    <!-- Time Display -->
+                    <span id="time-display" class="text-sm font-medium text-gray-300">00:00 / 00:00</span>
+                </div>
+                
+                <!-- Right-side Controls (Settings, Fullscreen) -->
+                <div class="flex items-center space-x-4">
+                    <!-- Settings Button (Placeholder) -->
+                    <button id="settings-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200 hidden">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <!-- Fullscreen Button -->
+                    <button id="fullscreen-btn" class="text-xl text-white hover:text-gray-300 transition-colors duration-200">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get all necessary DOM elements
+        const videoPlayerContainer = document.getElementById('video-player-container');
+        const video = document.getElementById('video-player');
+        const controls = document.getElementById('video-controls');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const timeDisplay = document.getElementById('time-display');
+        const volumeSlider = document.getElementById('volume-slider');
+        const muteBtn = document.getElementById('mute-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
+        const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
+        const nextEpisodeBtn = document.getElementById('next-episode-btn');
+
+        // State variables
+        let isMuted = false;
+        let lastVolume = 1;
+        let controlsTimeout;
+
+        // Function to format time in MM:SS format
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+            return `${formattedMinutes}:${formattedSeconds}`;
+        }
+
+        // Function to update the video player UI
+        function updatePlayerUI() {
+            const playIcon = video.paused ? 'fa-play' : 'fa-pause';
+            playPauseBtn.querySelector('i').className = `fas ${playIcon}`;
+
+            const currentTime = formatTime(video.currentTime);
+            const duration = isNaN(video.duration) ? '00:00' : formatTime(video.duration);
+            timeDisplay.textContent = `${currentTime} / ${duration}`;
+
+            if (!isNaN(video.duration)) {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressBar.value = progress;
+            }
+
+            const volumeIcon = video.muted || video.volume === 0 ? 'fa-volume-mute' : (video.volume > 0.5 ? 'fa-volume-up' : 'fa-volume-down');
+            muteBtn.querySelector('i').className = `fas ${volumeIcon}`;
+        }
+
+        // --- Event Listeners ---
+
+        // Play/Pause button
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        });
+
+        // Video playback events
+        video.addEventListener('play', () => {
+            updatePlayerUI();
+            pauseDetailsOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+            pauseDetailsOverlay.classList.add('opacity-0', 'pointer-events-none');
+        });
+
+        video.addEventListener('pause', () => {
+            updatePlayerUI();
+            pauseDetailsOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            pauseDetailsOverlay.classList.add('opacity-100', 'pointer-events-auto');
+        });
+
+        // Update progress bar and time display as the video plays
+        video.addEventListener('timeupdate', () => {
+            updatePlayerUI();
+        });
+
+        // Show loading spinner when video is buffering
+        video.addEventListener('waiting', () => {
+            loadingOverlay.classList.remove('hidden');
+        });
+
+        // Hide loading spinner when video resumes playing
+        video.addEventListener('playing', () => {
+            loadingOverlay.classList.add('hidden');
+        });
+
+        // Handle video metadata loaded to get duration
+        video.addEventListener('loadedmetadata', () => {
+            updatePlayerUI();
+        });
+
+        // Seek functionality
+        progressBar.addEventListener('input', () => {
+            const newTime = (progressBar.value / 100) * video.duration;
+            video.currentTime = newTime;
+        });
+
+        // Volume control
+        volumeSlider.addEventListener('input', () => {
+            video.volume = volumeSlider.value;
+            video.muted = video.volume === 0;
+            updatePlayerUI();
+        });
+
+        // Mute button
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                lastVolume = video.volume; // Store current volume
+                video.volume = 0;
+                video.muted = true;
+            } else {
+                video.muted = false;
+                video.volume = lastVolume; // Restore previous volume
+            }
+            volumeSlider.value = video.volume; // Update the slider
+            updatePlayerUI();
+        });
+
+        // Fullscreen functionality
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                videoPlayerContainer.requestFullscreen();
+            }
+        });
+
+        // Listen for fullscreen change events to update the button icon
+        document.addEventListener('fullscreenchange', () => {
+            const fullscreenIcon = document.fullscreenElement ? 'fa-compress' : 'fa-expand';
+            fullscreenBtn.querySelector('i').className = `fas ${fullscreenIcon}`;
+        });
+
+        // Show/hide controls on mouse movement
+        videoPlayerContainer.addEventListener('mousemove', () => {
+            controls.classList.remove('opacity-0', 'pointer-events-none');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                if (!video.paused) {
+                    controls.classList.add('opacity-0', 'pointer-events-none');
+                }
+            }, 3000);
+        });
+
+        // Keep controls visible when mouse is over them
+        controls.addEventListener('mouseenter', () => {
+            clearTimeout(controlsTimeout);
+            controls.classList.remove('opacity-0', 'pointer-events-none');
+        });
+
+        // Hide controls after leaving them
+        controls.addEventListener('mouseleave', () => {
+            if (!video.paused) {
+                 controlsTimeout = setTimeout(() => {
+                    controls.classList.add('opacity-0', 'pointer-events-none');
+                }, 3000);
+            }
+        });
+
+        // Show Next Episode overlay when video ends
+        video.addEventListener('ended', () => {
+            nextEpisodeOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            nextEpisodeOverlay.classList.add('opacity-100', 'pointer-events-auto');
+            controls.classList.remove('opacity-100');
+            controls.classList.add('opacity-0');
+        });
+
+        // Simulate loading the next episode
+        nextEpisodeBtn.addEventListener('click', () => {
+            // For this example, we will simply restart the video.
+            // In a real application, you would load a new video source here.
+            nextEpisodeOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+            nextEpisodeOverlay.classList.add('opacity-0', 'pointer-events-none');
+            video.currentTime = 0;
+            video.play();
+        });
+
+        // Initial setup
+        window.addEventListener('load', () => {
+            // Wait for the window to load before doing any setup
+            updatePlayerUI();
+        });
+    </script>
+</body>
+</html>
+
