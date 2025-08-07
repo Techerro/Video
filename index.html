@@ -117,6 +117,7 @@
             min-width: 200px; /* Default for mobile */
             right: 0; /* Align to the right */
             bottom: calc(100% + 10px); /* Position above controls */
+            z-index: 50; /* Ensure it's on top */
         }
         @media (min-width: 768px) {
             .settings-menu {
@@ -185,7 +186,7 @@
             padding: 1rem;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden; /* Hide overflowing content during transition */
         }
         .episodes-overlay.active {
             transform: translateX(0);
@@ -209,6 +210,20 @@
             object-fit: cover;
             border-radius: 0.25rem;
         }
+        .thumbnail-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .thumbnail-overlay.active {
+            opacity: 1;
+        }
         
     </style>
 </head>
@@ -226,6 +241,9 @@
             
             <!-- The Video Element -->
             <video id="video-player" class="w-full h-full object-contain" preload="auto"></video>
+            
+            <!-- Thumbnail Overlay (for when video is paused) -->
+            <div id="thumbnail-overlay" class="thumbnail-overlay"></div>
 
             <!-- Loading Spinner Overlay -->
             <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
@@ -233,7 +251,7 @@
             </div>
 
             <!-- Pause Details Overlay (Initially hidden) -->
-            <div id="pause-details-overlay" class="video-details-overlay hidden">
+            <div id="pause-details-overlay" class="video-details-overlay hidden z-30">
                 <div class="flex flex-col justify-center items-center p-6 md:p-12 w-full max-w-4xl">
                     <h2 id="video-title" class="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg text-center">Stranger Things</h2>
                     <p id="video-description" class="text-sm md:text-xl text-gray-300 leading-relaxed drop-shadow-lg text-center max-w-2xl mb-6">This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.</p>
@@ -249,8 +267,8 @@
             </div>
             
             <!-- All Episodes Overlay (Initially hidden) -->
-            <div id="episodes-overlay" class="episodes-overlay hidden">
-                <div id="episodes-main-view" class="w-full h-full flex flex-col transition-transform duration-500">
+            <div id="episodes-overlay" class="episodes-overlay hidden z-40">
+                <div id="episodes-main-view" class="w-full h-full flex flex-col flex-shrink-0 transition-transform duration-500">
                     <div class="flex items-center mb-4">
                         <button id="episodes-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
                             <i class="fas fa-arrow-left"></i>
@@ -258,12 +276,12 @@
                         <h3 class="text-xl md:text-3xl font-bold ml-4">Episodes</h3>
                     </div>
                     <!-- Season Selector -->
-                    <div id="season-list-container" class="space-y-4">
+                    <div id="season-list-container" class="space-y-4 flex-grow overflow-y-auto">
                         <!-- Seasons will be populated here -->
                     </div>
                 </div>
 
-                <div id="episodes-list-view" class="w-full h-full flex-shrink-0 flex flex-col transition-transform duration-500 transform translate-x-full absolute top-0 left-0 p-4">
+                <div id="episodes-list-view" class="w-full h-full flex-shrink-0 flex flex-col transition-transform duration-500 absolute top-0 left-0 p-4 transform translate-x-full">
                     <div class="flex items-center mb-4">
                         <button id="episodes-list-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
                             <i class="fas fa-arrow-left"></i>
@@ -276,9 +294,8 @@
                 </div>
             </div>
 
-
             <!-- End of Video "Next Episode" Overlay -->
-            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none">
+            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none z-30">
                 <h3 class="text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">Video Finished!</h3>
                 <button id="next-episode-btn" class="px-6 py-3 md:px-10 md:py-6 bg-red-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg focus:ring-4 focus:ring-white" data-focusable>
                     Play Again
@@ -286,7 +303,7 @@
             </div>
 
             <!-- Video Controls Container -->
-            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer">
+            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer z-50">
                 <!-- Progress Bar -->
                 <div class="progress-bar-container mb-3 md:mb-4">
                     <div id="progress-buffered" class="progress-buffered"></div>
@@ -332,11 +349,6 @@
                             </div>
                         </div>
 
-                        <!-- Subtitles Button -->
-                        <button id="subtitles-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                            <i class="fas fa-comment-dots"></i>
-                        </button>
-
                         <!-- Settings Menu Trigger -->
                         <div class="relative">
                             <button id="settings-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
@@ -357,12 +369,6 @@
                                         <li class="menu-item text-sm md:text-base" data-menu="audio-menu" data-focusable>
                                             <div class="flex items-center">
                                                 <i class="fas fa-headphones mr-3 text-gray-400"></i><span>Audio Tracks</span>
-                                            </div>
-                                            <i class="fas fa-chevron-right text-gray-400"></i>
-                                        </li>
-                                        <li class="menu-item text-sm md:text-base" data-menu="subtitle-menu" data-focusable>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-closed-captioning mr-3 text-gray-400"></i><span>Subtitles</span>
                                             </div>
                                             <i class="fas fa-chevron-right text-gray-400"></i>
                                         </li>
@@ -388,13 +394,6 @@
                                         <span class="text-sm md:text-base">Audio Tracks</span>
                                     </div>
                                     <ul id="audio-options" class="space-y-1 text-sm md:text-base"></ul>
-                                </div>
-                                <div id="subtitle-menu" class="menu-submenu">
-                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
-                                        <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-sm md:text-base">Subtitles</span>
-                                    </div>
-                                    <ul id="subtitle-options" class="space-y-1 text-sm md:text-base"></ul>
                                 </div>
                                 <div id="aspect-ratio-menu" class="menu-submenu">
                                     <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
@@ -463,13 +462,11 @@
         const mainSettingsView = document.getElementById('main-settings-view');
         const qualityMenu = document.getElementById('quality-menu');
         const audioMenu = document.getElementById('audio-menu');
-        const subtitleMenu = document.getElementById('subtitle-menu');
         const qualityOptions = document.getElementById('quality-options');
         const audioOptions = document.getElementById('audio-options');
-        const subtitleOptions = document.getElementById('subtitle-options');
-        const subtitlesBtn = document.getElementById('subtitles-btn');
         const aspectRatioMenu = document.getElementById('aspect-ratio-menu');
         const aspectRatioOptions = document.getElementById('aspect-ratio-options');
+        const thumbnailOverlay = document.getElementById('thumbnail-overlay');
 
         const focusableElements = Array.from(document.querySelectorAll('[data-focusable]'));
         
@@ -480,6 +477,7 @@
         const seriesData = {
             title: "Stranger Things",
             description: "This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.",
+            thumbnailUrl: "https://placehold.co/1920x1080/120302/ffffff?text=Stranger+Things",
             seasons: [
                 {
                     season: 1,
@@ -529,10 +527,8 @@
                     console.log("HLS Manifest loaded, starting playback...");
                     populateQualityOptions(hls.levels);
                     populateAudioOptions(hls.audioTracks);
-                    populateSubtitleOptions(hls.subtitleTracks);
                     updateActiveMenuItem(qualityOptions, hls.currentLevel === -1 ? -1 : hls.currentLevel, 'level');
                     updateActiveMenuItem(audioOptions, hls.audioTrack, 'audioIndex');
-                    updateActiveMenuItem(subtitleOptions, hls.subtitleTrack, 'subtitleIndex');
                     updateActiveMenuItem(aspectRatioOptions, video.style.objectFit || 'contain', 'aspectRatio');
                     video.play();
                 });
@@ -565,7 +561,7 @@
             });
 
             let targetItem;
-            if (datasetKey === 'level' || datasetKey === 'audioIndex' || datasetKey === 'subtitleIndex') {
+            if (datasetKey === 'level' || datasetKey === 'audioIndex') {
                 targetItem = ulElement.querySelector(`[data-${datasetKey}="${activeValue}"]`);
             } else if (datasetKey === 'aspectRatio') {
                  targetItem = ulElement.querySelector(`[data-${datasetKey}="${activeValue}"]`);
@@ -604,22 +600,6 @@
                 });
             } else {
                 audioOptions.innerHTML = '<li class="text-gray-400 p-2 text-sm md:text-base">No audio tracks available.</li>';
-            }
-        }
-        
-        function populateSubtitleOptions(tracks) {
-            subtitleOptions.innerHTML = `<li class="menu-item text-sm md:text-base p-2 rounded cursor-pointer" data-subtitle-index="-1" data-focusable><span>Off</span><i class="fas fa-check ml-auto hidden"></i></li>`;
-            if (tracks && tracks.length > 0) {
-                tracks.forEach((track, index) => {
-                    const li = document.createElement('li');
-                    li.classList.add('menu-item', 'text-sm', 'md:text-base', 'p-2', 'rounded', 'cursor-pointer');
-                    li.innerHTML = `<span>${track.name}</span><i class="fas fa-check ml-auto hidden"></i>`;
-                    li.dataset.subtitleIndex = index;
-                    li.dataset.focusable = true;
-                    subtitleOptions.appendChild(li);
-                });
-            } else {
-                subtitleOptions.innerHTML = '<li class="text-gray-400 p-2 text-sm md:text-base">No subtitles available.</li>';
             }
         }
 
@@ -793,6 +773,7 @@
             pauseDetailsOverlay.classList.add('hidden');
             episodesOverlay.classList.add('hidden');
             loadingOverlay.classList.add('hidden');
+            thumbnailOverlay.classList.remove('active'); // Hide thumbnail
             // Attempt to lock screen orientation on mobile devices
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(e => {
@@ -804,9 +785,11 @@
         video.addEventListener('pause', () => {
             updatePlayerUI();
             pauseDetailsOverlay.classList.remove('hidden');
-            // Hide episodes overlay if it was open
             episodesOverlay.classList.add('hidden');
             episodesListView.classList.add('translate-x-full');
+            // Show thumbnail with a mock URL
+            thumbnailOverlay.style.backgroundImage = `url(${seriesData.thumbnailUrl})`;
+            thumbnailOverlay.classList.add('active');
         });
 
         video.addEventListener('timeupdate', () => updatePlayerUI());
@@ -876,28 +859,6 @@
                 }
                 updateActiveMenuItem(audioOptions, hls.audioTrack, 'audioIndex');
             }
-        });
-
-        // Subtitle track selection
-        subtitleOptions.addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (li && li.dataset.subtitleIndex) {
-                 if (hls) {
-                    const index = parseInt(li.dataset.subtitleIndex, 10);
-                    hls.subtitleTrack = index;
-                }
-                updateActiveMenuItem(subtitleOptions, hls.subtitleTrack, 'subtitleIndex');
-            }
-        });
-
-        // Subtitles button on control bar
-        subtitlesBtn.addEventListener('click', () => {
-            settingsMenu.classList.remove('hidden'); // Open main settings menu
-            document.getElementById('subtitle-menu').classList.add('active'); // Directly open subtitle submenu
-            // Optionally close other submenus if any were open
-            document.getElementById('quality-menu').classList.remove('active');
-            document.getElementById('audio-menu').classList.remove('active');
-            document.getElementById('aspect-ratio-menu').classList.remove('active');
         });
 
         // Aspect Ratio selection
