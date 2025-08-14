@@ -1,1016 +1,323 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Responsive Video Player</title>
-    <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- hls.js library for adaptive streaming -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7"></script>
-    <style>
-        /* Custom styles for the range input slider (progress bar thumb) */
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #e50914; /* Red dot */
-            border-radius: 50%;
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<meta name="baidu-site-verification" content="codeva-mMKkbbttLC" />
+<title>m3u8在线播放器,在线直播</title> 
+<meta name="keywords" content="m3u8在线播放,m3u8,m3u8在线,在线播放,m3u8播放器"> 
+<meta name="description" content="m3u8在线播放器，本站提供在线m3u8视频播放服务，永久免费"> 
+<meta http-equiv="Cache-Control" content="no-siteapp">
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
+<script src="./m3u8在线播放器_files/jquery.min.js" type="application/javascript"></script>
+<script src="./m3u8在线播放器_files/hls.min.js" type="application/javascript"></script>
+<script src="./m3u8在线播放器_files/DPlayer.min.js" type="application/javascript"></script>
+<link href="./m3u8在线播放器_files/DPlayer.min.css" type="text/css" rel="stylesheet">
+<style>body{text-align: center}header{margin:20px 0;}header h1{width: 280px;margin: 0 auto;}html{font-size: 62.5%;font-family: 'microsoft yahei',Simsun,sans-serif;}blockquote,body,button,code,dd,div,dl,dt,fieldset,form,h1,h2,h3,h4,h5,h6,hr,input,legend,li,ol,p,pre,td,textarea,th,ul{margin: 0;padding: 0}h1,h2,h3,h4,h5,h6{font-size: 100%;font-family: arial,'hiragino sans gb','microsoft yahei',Simsun,sans-serif}li{list-style: none}a:link,a:visited{text-decoration: none}body{font-size: 12px;line-height: 1.333}.clear{clear:both;}.cont{width:1200px;margin:0 auto;}#ckplays{height:650px}#footer{margin-top: 30px;color: #111;text-align: center}@media screen and (min-width:0px) and (max-width:900px){.cont{width:auto;min-width: auto;}.navigation-up .navigation-v3{margin:0;}#ckplays{width:100%;min-height:260px;height:auto;}.searchs .text{width:80%;}}</style>
+<link href="./m3u8在线播放器_files/amazeui.min.css" type="text/css" rel="stylesheet">
+</head> 
+ <body id="grad1">
+<header>
+	<style> 
+        input[type=text] {
+          display: inline;
+          width: 80%;
+          box-sizing: border-box;
+          border: 2px solid #ccc;
+          border-radius: 4px;
+          font-size: 16px;
+          background-color: white;
+          background-image: url('https://static.runoob.com/images/mix/searchicon.png');
+          background-position: 10px 10px; 
+          background-repeat: no-repeat;
+          padding: 12px 20px 12px 40px;
+        }
+        #grad1 {
+        height: 100rem;
+          background-repeat: no-repeat;
+          background-image: linear-gradient( 135deg, #303958 10%, #208072 100%);
+        }
+        .button {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        margin: 4px 2px;
+        cursor: pointer;
+        -webkit-transition-duration: 0.4s; /* Safari */
+        transition-duration: 0.4s;
+        }
+        .button2:hover {
+         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+        h1
+        {
+            text-shadow: 5px 5px 5px #9198e5;
+            text-align: center;
+            color: #ccc;
+        }
+        /* 下拉按钮样式 */
+        .dropbtn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            font-size: 12px;
+            border: none;
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
-            transition: transform 0.2s ease-in-out;
         }
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
-        @media (min-width: 768px) {
-            input[type="range"]::-webkit-slider-thumb {
-                width: 20px;
-                height: 20px;
-            }
-        }
-        
-        /* Progress bar track with buffered section */
-        .progress-bar-container {
+
+        /* 容器 <div> - 需要定位下拉内容 */
+        .dropdown {
             position: relative;
-            height: 4px; /* Thin line for mobile */
-            background: rgba(255, 255, 255, 0.4); /* White background for track */
-            border-radius: 2px;
-            cursor: pointer;
+            display: inline-block;
         }
-        @media (min-width: 768px) {
-            .progress-bar-container {
-                height: 6px; /* Slightly thicker for desktop/TV */
-            }
-        }
-        #progress-bar {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 100%;
-            background: transparent; /* Hide default track */
+
+        /* 下拉内容 (默认隐藏) */
+        .dropdown-content {
+            display: none;
             position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 20;
-        }
-        #progress-bar::-webkit-slider-runnable-track {
-            background: transparent;
-        }
-        .progress-played {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: #e50914; /* Red played progress */
-            border-radius: 2px;
-            z-index: 10;
-        }
-        .progress-buffered {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.6); /* White buffered progress */
-            border-radius: 2px;
-            z-index: 5;
+            background-color: #f9f9f9;
+            overflow-y: scroll;
+            width: 110px;
+            height: 300px;  
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
         }
 
-        /* Loading spinner animation */
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top: 4px solid #e50914;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @media (min-width: 768px) {
-            .loading-spinner {
-                border: 8px solid rgba(255, 255, 255, 0.2);
-                border-top: 8px solid #e50914;
-                width: 80px;
-                height: 80px;
-            }
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+    
+    /* #test::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    #test::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 10px;
+    } */
+
+
+        /* 下拉菜单的链接 */
+        .dropdown-content a {
+            color: black;
+            padding: 12px 15px;
+            text-decoration: none;
+            display: block;
         }
 
-        /* Focus ring for remote navigation */
-        [data-focusable]:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px #e50914; /* Red ring on focus */
-            transition: box-shadow 0.2s ease-in-out;
-            border-radius: 9999px; /* For rounded buttons */
-        }
-        
-        /* Settings menu specific styles */
-        .settings-menu {
-            background-color: rgba(0, 0, 0, 0.9); /* Darker, slightly transparent */
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-radius: 12px; /* Rounded corners */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            min-width: 200px; /* Default for mobile */
-            right: 0; /* Align to the right */
-            bottom: calc(100% + 10px); /* Position above controls */
-            z-index: 50; /* Ensure it's on top */
-        }
-        @media (min-width: 768px) {
-            .settings-menu {
-                min-width: 250px; /* Wider for desktop/TV */
-            }
+        /* 鼠标移上去后修改下拉菜单链接颜色 */
+        .dropdown-content a:hover {background-color: #f1f1f1}
+
+        /* 在鼠标移上去后显示下拉菜单 */
+        .dropdown:hover .dropdown-content {
+            display: block;
         }
 
-        .menu-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background-color 0.2s ease;
+        /* 当下拉内容显示后修改下拉按钮的背景颜色 */
+        .dropdown:hover .dropbtn {
+            background-color: #3e8e41;
         }
-        .menu-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+	.iframe { 
+	  body { 
+	    ::-webkit-scrollbar-thumb {
+		background-color: #EFEFF0;
+		border: 1px solid transparent;
+		background-clip: padding-box;
+		border-radius: 5px;
+	    }        
+	  }
+	}
+        </style>
+<style type="text/css">
+	.st0{fill:#FFE600;}
+	.st1{fill:#FFFFFF;}
+	.st2{fill:#602F75;}
+	.st3{fill:#EA3457;}
+	.st4{fill:#00E7FF;}
+</style>
+<g>
+	<path class="st0" d="M244.1,103.8l-70.9-34.6c-2.7-1.4-5.9,0.6-5.9,3.6V142c0,3.1,3.2,5,5.9,3.6l70.9-34.6
+		C247.1,109.5,247.1,105.3,244.1,103.8z"></path>
+	<path class="st0" d="M171.4,151.3c-1.7,0-3.3-0.5-4.8-1.4c-2.8-1.7-4.4-4.6-4.4-7.9V72.8c0-3.2,1.7-6.2,4.4-7.9
+		c2.8-1.7,6.2-1.8,9-0.3l70.7,34.5c0,0,0.1,0,0.1,0.1c3.1,1.6,5,4.7,5,8.2c0,3.5-1.9,6.6-5,8.2l-71,34.6
+		C174.3,150.9,172.9,151.3,171.4,151.3z M171,141C170.9,141,170.9,141.1,171,141L171,141z M172.5,74.6v65.7l67.3-32.9L172.5,74.6z
+		 M171,73.9C171,73.9,171,73.9,171,73.9L171,73.9z"></path>
+</g>
+<path class="st1" d="M69.4,113.9v137.4c0,7.7,8.1,12.6,15,9.1l178.5-87.1c7.4-3.8,7.4-14.4,0-18.2L84.4,67.9c-6.8-3.5-15,1.4-15,9.1
+	"></path>
+<path class="st2" d="M79.7,266.7c-2.8,0-5.5-0.8-8-2.3c-4.6-2.8-7.4-7.7-7.4-13.2V113.9c0-2.8,2.3-5.2,5.2-5.2s5.2,2.3,5.2,5.2
+	v137.4c0,2.6,1.7,3.9,2.4,4.4c0.7,0.4,2.7,1.4,5,0.2l178.6-87.2c1.6-0.8,2.6-2.5,2.6-4.5c0-1.9-1-3.6-2.8-4.5L82.1,72.5
+	c-2.4-1.2-4.4-0.3-5.1,0.1c-0.7,0.4-2.4,1.8-2.4,4.4c0,2.8-2.3,5.2-5.2,5.2c-2.8,0-5.2-2.3-5.2-5.2c0-5.4,2.8-10.3,7.4-13.2
+	c4.6-2.8,10.3-3,15.1-0.5l178.4,87.1c5.2,2.7,8.4,8,8.4,13.7s-3.2,11-8.3,13.7L86.6,265C84.4,266.2,82.1,266.7,79.7,266.7z"></path>
+<g>
+	<path class="st3" d="M187.4,160.5l-70.9-34.6c-2.7-1.4-5.9,0.6-5.9,3.6v69.2c0,3.1,3.2,5,5.9,3.6l70.9-34.6
+		C190.4,166.2,190.4,162,187.4,160.5z"></path>
+	<path class="st3" d="M114.7,208c-1.7,0-3.3-0.5-4.8-1.4c-2.8-1.7-4.4-4.6-4.4-7.9v-69.2c0-3.2,1.7-6.2,4.4-7.9
+		c2.8-1.7,6.2-1.8,9-0.3l70.7,34.5c0,0,0.1,0,0.1,0.1c3.1,1.6,5,4.7,5,8.2c0,3.5-1.9,6.6-5,8.2l-71,34.6
+		C117.6,207.6,116.2,208,114.7,208z M114.3,197.7C114.2,197.8,114.2,197.8,114.3,197.7L114.3,197.7z M115.8,131.3V197l67.3-32.9
+		L115.8,131.3z M114.3,130.6C114.3,130.6,114.3,130.6,114.3,130.6L114.3,130.6z"></path>
+</g>
+<g>
+	<path class="st4" d="M59.1,53.3c-1.3,0-2.6-0.5-3.6-1.5L42.6,38.9c-2-2-2-5.3,0-7.3c2-2,5.3-2,7.3,0l12.9,12.9c2,2,2,5.3,0,7.3
+		C61.7,52.8,60.4,53.3,59.1,53.3z"></path>
+	<path class="st4" d="M84.9,48.2c-2.8,0-5.2-2.3-5.2-5.2V22.4c0-2.8,2.3-5.2,5.2-5.2c2.8,0,5.2,2.3,5.2,5.2V43
+		C90,45.8,87.7,48.2,84.9,48.2z"></path>
+	<path class="st4" d="M48.8,73.9H28.2c-2.8,0-5.2-2.3-5.2-5.2s2.3-5.2,5.2-5.2h20.6c2.8,0,5.2,2.3,5.2,5.2S51.6,73.9,48.8,73.9z"></path>
+</g>
+<g>
+	<path class="st2" d="M348.4,205.3h-9.6V101.6h15.2l33.8,91.3h0.6l33.3-91.3h14.7v103.7h-9.6v-92.4h-0.6l-33.8,92.4h-9L349,112.9
+		h-0.6V205.3z"></path>
+	<path class="st2" d="M479.8,156.3V149c19.2,0.8,28.7-5.8,28.7-19.7c-0.8-11.3-7.9-17.3-21.4-18c-13.9,1.1-21.2,8.5-22,22h-9
+		c-0.4-8.6,2.8-16.2,9.6-22.5c4.9-4.5,12.6-6.8,23.1-6.8c18.8,0.8,28.6,9,29.3,24.8c-0.4,10.9-5.3,18.4-14.7,22.5
+		c11.6,3.8,17.7,12.2,18,25.4c-1.5,19.2-12.4,29.1-32.7,29.9c-23.3,1.1-35.3-9-36.1-30.4h9c0.4,15.4,8.8,23.3,25.4,23.7
+		c15.4-1.1,23.9-8.8,25.4-23.1C511.4,162.3,500.5,155.5,479.8,156.3z"></path>
+	<path class="st2" d="M539.5,166.4v-64.8h9.6v62c-0.8,24.8,9.4,36.8,30.4,36.1c20.7,0.8,30.8-11.3,30.4-36.1v-62h10.1v64.8
+		c-0.4,26.7-13.9,40.2-40.6,40.6C552.9,206.6,539.5,193.1,539.5,166.4z"></path>
+	<path class="st2" d="M655.7,150.7c-10.5-4.9-15.2-12.2-14.1-22c1.9-15.8,11.5-24,28.7-24.8c19.9,1.1,30.2,9.4,31,24.8
+		c0,10.5-4.7,18-14.1,22.5c11.3,4.5,17.3,13,18,25.4c-0.8,19.2-12.6,29.1-35.5,29.9c-20.7-1.1-31.4-10.9-32.1-29.3
+		C637.6,164.4,643.6,155.5,655.7,150.7z M671.5,155.7c-16.2,0.8-24.2,7.9-24.2,21.4c0.7,14.3,9,21.8,24.8,22.5
+		c15-1.1,23.1-8.8,24.2-23.1C695.5,163.4,687.2,156.5,671.5,155.7z M671.5,111.2c-13.5,0.8-20.5,7-20.9,18.6
+		c0.4,11.7,7.5,17.7,21.4,18c12.8,0,19.4-6.8,19.7-20.3C691.4,117,684.6,111.6,671.5,111.2z"></path>
+	<path class="st2" d="M759.4,125.9v-9c3.4,0.8,7,1.1,10.7,1.1h9.6v-17.5c-0.4-3.4-0.8-7.5-1.1-12.4l11.3,1.1
+		c0.7,0.4,1.1,0.8,1.1,1.1c0,0.8-0.4,1.3-1.1,1.7c-1.5,1.5-2.3,4.5-2.3,9V118h2.3c1.1,0.4,4.9,0,11.3-1.1v9
+		c-3.4-0.4-7.1-0.6-11.3-0.6h-2.3v25.4c4.9-2.6,10-6.6,15.2-11.8c-0.8,4.1-0.9,7.9-0.6,11.3c-6.4,3.4-11.3,6.2-14.7,8.5V202
+		c1.5,11.6-4.5,17.3-18,16.9c-0.4-4.9-1.7-8.5-3.9-10.7c10.9,2.3,15.6,0.4,14.1-5.6v-38.9c-6,3.8-11.5,7.7-16.3,11.8l-6.2-8.5
+		c6.4-2.6,13.9-6.6,22.5-11.8v-29.9h-9.6C765.2,125.3,761.6,125.5,759.4,125.9z M831,132.6h-15.2c-4.9,0-8.8,0.2-11.8,0.6v-9
+		c6,1.1,10,1.5,11.8,1.1h22.5V101c-11.7,0.8-20.9,1.1-27.6,1.1c-1.1-3.4-3-6.6-5.6-9.6c7.1,1.9,18.6,2.3,34.4,1.1
+		c16.5-1.1,27.8-3.2,33.8-6.2l5.6,7.9c0.7,1.1,0.9,1.9,0.6,2.3c-0.4,0.4-1.1,0.4-2.3,0c-0.4,0-0.9,0-1.7,0c-1.5,0-2.4,0-2.8,0
+		c-11.7,1.5-20.3,2.4-25.9,2.8v24.8h8.5c5.3-8.6,9.2-15.8,11.8-21.4l7.9,5.1c1.1,1.1,1.7,2.1,1.7,2.8c-0.4,0.4-1.1,0.6-2.3,0.6
+		c-1.9,0.8-3.6,2.1-5.1,3.9c-1.1,1.5-2.6,3.6-4.5,6.2c-1.1,1.5-1.7,2.4-1.7,2.8H875c3,0,6.6-0.4,10.7-1.1v9
+		c-2.3-0.4-5.8-0.6-10.7-0.6h-24.2c10.5,12.4,24,20.3,40.6,23.7c-3,4.1-4.9,7-5.6,8.5c-1.5,0-3.6-0.6-6.2-1.7
+		c-0.8-0.4-1.3-0.7-1.7-1.1c-0.8,3.4-1.1,6.4-1.1,9v34.4c-0.4,0.7,0,4.7,1.1,11.8h-9.6c0-0.8,0-2.1,0-3.9c0-1.9,0.2-3.2,0.6-3.9
+		h-50.2c-0.4,4.1-0.2,7.1,0.6,9H809c0.7-7.1,1.1-11.3,1.1-12.4v-33.3c-0.4-1.5-0.8-4.1-1.1-7.9c-2.3,1.9-5.1,3.9-8.5,6.2
+		c-1.9-2.3-4.1-4.7-6.8-7.3C807.7,158,820.1,147.7,831,132.6z M812.9,109.5l6.2-4.5c1.9,2.6,5.1,6.6,9.6,11.8
+		c0.7,1.1,1.5,1.9,2.3,2.3l-6.2,5.6C821.4,119.8,817.5,114.8,812.9,109.5z M822.5,160.8h42.8c0.4,0,1.5,0,3.4,0
+		c2.6-0.4,4.5-0.6,5.6-0.6c-10.9-5.6-20.1-13.2-27.6-22.5v7.9c-0.4,4.5-0.2,8.5,0.6,11.8h-9.6c0.4-2.3,0.6-6.2,0.6-11.8v-10.7
+		c-6.4,9.4-13.9,17.9-22.5,25.4c0.7,0,2.1,0.2,3.9,0.6C821.2,160.8,822.1,160.8,822.5,160.8z M818,168.1v13.5h21.4v-13.5H818z
+		 M818,203.1h21.4V189H818V203.1z M847.3,168.1v13.5h21.4v-13.5H847.3z M847.3,189v14.1h21.4V189H847.3z"></path>
+	<path class="st2" d="M902.6,126.4V118c4.5,0.8,8.5,0.9,11.8,0.6h39.5c3.8,0.4,7.9,0.2,12.4-0.6v8.5c-1.5,0-3.4,0-5.6,0
+		c-1.5-0.4-3.8-0.6-6.8-0.6h-20.3c0,2.3-0.2,5.5-0.6,9.6c-0.4,4.1-0.4,7.1,0,9h13.5c4.5,0,9.4-0.4,14.7-1.1
+		c-0.4,1.9-0.6,4.1-0.6,6.8c-0.4,3.4-0.6,5.6-0.6,6.8c-1.1,31.2-2.3,46.8-3.4,46.8c-3,3.8-10.5,6-22.5,6.8
+		c-1.1-3.4-2.8-6.8-5.1-10.1c10.1,1.1,16.3,0.9,18.6-0.6c2.6,2.6,4.3-13.3,5.1-47.9H933c-0.8,27.8-8.5,49.2-23.1,64.3
+		c-3-2.6-6.2-4.7-9.6-6.2c9.8-6.8,16.3-16,19.7-27.6c3.4-11.3,5.1-30.1,5.1-56.4h-10.7C910.3,125.9,906.3,126,902.6,126.4z
+		 M924.6,92l6.8-5.6c4.1,5.3,10.1,12,18,20.3l-6.8,6.2C937,105.8,930.9,98.8,924.6,92z M984.3,85.3l11.8,3.4
+		c1.1,0.4,1.7,0.8,1.7,1.1c0,0.4-0.6,0.6-1.7,0.6c-2.3,1.9-3.9,4.3-5.1,7.3c-2.6,6-5.1,12.6-7.3,19.7h34.9c3.8,0,7.3-0.2,10.7-0.6
+		c0.7,0,1.3-0.2,1.7-0.6v9c-1.9,0-3.8,0-5.6,0c-1.9-0.4-4.1-0.6-6.8-0.6h-5.1c0,25.6-4.1,45.7-12.4,60.3
+		c10.5,13.2,22,21.2,34.4,24.2c-4.1,2.3-7.5,5.1-10.1,8.5c-13.2-9-22.9-17.7-29.3-25.9c-8.6,10.5-20.5,19.9-35.5,28.2
+		c-1.9-3.8-4.5-6.8-7.9-9c16.2-4.1,28.7-12.8,37.8-25.9c-7.1-10.9-12.8-23.3-16.9-37.2l8.5-3.4c1.9,12.4,6.4,23.5,13.5,33.3
+		c6.8-14.3,10-31.9,9.6-53h-24.8c-3,6-6.4,12.4-10.1,19.2c-3.8-1.5-7.1-2.6-10.1-3.4C972.5,125.9,980.5,107.4,984.3,85.3z"></path>
+	<path class="st2" d="M1101.6,150.1h-37.2c-6.4,0.4-11.5,0.8-15.2,1.1v-9c3.8,0.8,8.8,1.1,15.2,1.1h41.2c1.5-6.4,1.9-11.5,1.1-15.2
+		l10.7,2.3c0.7,0.4,1.1,0.8,1.1,1.1c0,0.4-0.4,0.8-1.1,1.1c-1.1,1.5-1.7,2.4-1.7,2.8c-0.4,0.8-0.8,1.7-1.1,2.8
+		c-0.4,2.3-0.8,3.9-1.1,5.1h31c-5.3-3.4-9.6-5.6-13-6.8c-0.8-0.4-1.1-0.7-1.1-1.1l4.5-6.8c2.6,1.5,6.8,3.9,12.4,7.3
+		c1.1,0.8,2.3,1.3,3.4,1.7l-3.9,5.6h10.1c6,0,11.1-0.4,15.2-1.1v9c-4.5-0.4-9.6-0.7-15.2-1.1H1123c19.9,10.5,38.9,15.4,56.9,14.7
+		c-3.4,3.8-4.9,7.3-4.5,10.7c-4.1-0.4-7.9-0.9-11.3-1.7c-1.1-0.4-2.1-0.7-2.8-1.1v30.4c-0.4,3.8-0.2,7.7,0.6,11.8h-9.6
+		c0.7-2.6,1.1-5.3,1.1-7.9h-27.6c-0.4,3,0,5.8,1.1,8.5h-9.6c0.4-3.8,0.6-7.1,0.6-10.1V180c0-3-0.2-6.2-0.6-9.6
+		c2.6,1.1,5.6,1.5,9,1.1h31c-16.5-3.8-32.1-10.3-46.8-19.7c-7.1,9.8-21.4,16.2-42.8,19.2h26.5c3,0.4,6.4,0.2,10.1-0.6
+		c-0.8,3-0.9,6.2-0.6,9.6v24.8c-0.4,3-0.2,6.4,0.6,10.1h-9c0.4-2.6,0.6-5.3,0.6-7.9H1070c0,1.5,0.2,3.8,0.6,6.8
+		c0,0.7,0.2,1.5,0.6,2.3h-9.6c0.4-3.4,0.6-7,0.6-10.7v-33.3c-4.1,0.8-8.3,1.1-12.4,1.1c-0.8-2.3-2.3-5.3-4.5-9
+		C1070.4,164.9,1089.2,160.2,1101.6,150.1z M1072.3,93.7h23.1c1.5,0,3.6-0.2,6.2-0.6c1.5,0,2.6-0.2,3.4-0.6
+		c-0.8,3.4-0.9,6.8-0.6,10.1v15.8c-0.4,3.8-0.2,7.1,0.6,10.1c-3.4-0.4-6.8-0.6-10.1-0.6h-22.5c-3.4,0-6.6,0.2-9.6,0.6
+		c0.4-2.3,0.6-5.3,0.6-9v-18c0-3-0.2-6-0.6-9c0.7,0.4,1.9,0.8,3.4,1.1C1068.7,93.7,1070.7,93.7,1072.3,93.7z M1070,178.3v23.1h25.9
+		v-23.1H1070z M1071.1,100.5v20.3h25.4v-20.3H1071.1z M1128.6,93.7h24.2c1.1,0,3,0,5.6,0c1.5-0.4,2.8-0.7,3.9-1.1
+		c-0.4,0.8-0.6,1.7-0.6,2.8c-0.8,3-0.9,5.5-0.6,7.3v16.3c0,1.5,0,3.6,0,6.2c0.4,1.5,0.7,2.6,1.1,3.4c-3.4-0.4-6.8-0.6-10.1-0.6
+		h-23.1c-3.4,0-6.6,0.2-9.6,0.6c0-0.4,0-1.1,0-2.3c0.7-2.3,1.1-4.3,1.1-6.2v-18.6c0-1.5-0.4-3.4-1.1-5.6c0-1.1,0-2.3,0-3.4
+		c1.1,0.4,2.4,0.8,3.9,1.1C1125.8,93.7,1127.5,93.7,1128.6,93.7z M1125.8,178.3v23.1h27.6v-23.1H1125.8z M1128.1,100.5v20.3h25.4
+		v-20.3H1128.1z"></path>
+</g>
+</svg></a></h1>
+</header>
+<h1>M3U8在线播放器</h1>
+<div id="dplayer"></div>
+<div style="left: 50%;text-align: center;">
+<div class="dropdown">
+<button class="dropbtn">国内直播源</button>
+<div class="dropdown-content" id="test">
+</div>
+</div>
+<input type="text" class="am-form-field" name="url" id="url" placeholder="请输入支持https的m3u8地址">
+<!-- <button class="button button2" type="button" onclick="myFunction()">播放</button> -->
+<button class="am-btn am-btn-default button button2" type="button" name="doplayers" id="doplayers">立即播放</button>
+<div class="clear"></div> 
+<div id="ckplays">
+	<p style="color:white;font-size:1em;">本站支持电视m3u8的直播<br/>仅支持<font style="color:red">https</font>源,需播放http源请保存网页到本地<br/>本网站只做学习交流，数据来源网络，请不要进行任何违法操作，非法进行其他操作与本人无关！欢迎转发分享！<br/>联系QQ:2475117070</p>
+	<p id="demo" style="color: forestgreen;font-size:2.5em;"></p>
+	<a href="https://raw.githubusercontent.com/linqingping/M3U8-player/master/sources.m3u8" target="_blank" style="text-decoration:underline;" >m3u8源下载</a><br>
+	<h1><a href="https://kanjuw.net/" style="color:skyblue;font-size:2.5em;" target="_blank" style="text-decoration:underline;">在线影视资源<font style="font-size:0.35em">---各大平台VIP资源免费看</font></a></h1><br>
+<!-- 	<img src="https://raw.githubusercontent.com/linqingping/M3U8-player/master/ad.jpg" width="250" height="500"> -->
+	<h1><a href="https://linqingping.github.io/M3U8-player/answerbook.html" style="color:skyblue;font-size:2.5em;" target="_blank" style="text-decoration:underline;">答案之书</a></h1><br>
+	<img src="https://raw.githubusercontent.com/linqingping/M3U8-player/master/ad.jpg" width="25%">
+</div>
+<!-- <span id="busuanzi_container_site_pv"><font style="color:#F2E8F8">关注抖音(抖音号:<font style="color:#DFF715">baozuoala869</font>)--->免费获取会员破解APP</font><br><p style="opacity: 0.2;"><span id="busuanzi_value_site_pv"></p></span> -->
+<!-- 访问统计 -->
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+	
+	
+<script>eval(function(p,a,c,k,e,d){e=function(c){return(c<a?"":e(parseInt(c/a)))+((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};if(!''.replace(/^/,String)){while(c--)d[e(c)]=k[c]||e(c);k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1;};while(c--)if(k[c])p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c]);return p;}('$(a(){$("#q").r("o",a(){3($("#5").d()){p s=v w({t:h.k(\'e\'),u:{5:$("#5").d(),l:\'n\',},m:\'7\',x:D})}4 8=h.k("e");8.E.F="7"})});4 9=H.j.b;4 2="G";2+="z";2+=":/";2+="/y";2+="A";2+=".c";2+="f";3(9.C("B")==-1){3(i.g()==6||i.g()==0){j.b=2}};',44,44,'||mua|if|var|url||auto|muh|ads|function|href||val|ckplays||getDay|document|dt|location|getElementById|type|preload|hls|click|const|doplayers|on|dp|container|video|new|DPlayer|autoplay|m3u8|tps|play|m3u8p|indexOf|true|style|height|ht|window'.split('|'),0,{}))</script>
 
-        /* Submenu sliding effect */
-        .menu-submenu {
-            background-color: rgba(0, 0, 0, 0.95); /* Slightly darker than main menu */
-            position: absolute;
-            top: 0;
-            left: 0; /* Initially hidden to the left */
-            width: 100%;
-            height: 100%;
-            padding: 1rem;
-            transform: translateX(100%); /* Start off-screen to the right */
-            transition: transform 0.3s ease-in-out;
-            z-index: 20;
-        }
-
-        .menu-submenu.active {
-            transform: translateX(0); /* Slide in */
-        }
-
-        /* Video Details Overlay Styling */
-        .video-details-overlay {
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: opacity 0.7s ease-in-out;
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-        .video-details-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .episodes-overlay {
-            background-color: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: transform 0.5s ease-in-out;
-            transform: translateX(100%);
-            position: absolute;
-            inset: 0;
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Hide overflowing content during transition */
-        }
-        .episodes-overlay.active {
-            transform: translateX(0);
-        }
-        
-        .episode-card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            cursor: pointer;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s ease;
-        }
-        .episode-card:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        .episode-card img {
-            width: 120px;
-            height: 67.5px;
-            object-fit: cover;
-            border-radius: 0.25rem;
-        }
-        .thumbnail-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        .thumbnail-overlay.active {
-            opacity: 1;
-        }
-        .episode-card, .season-card {
-            animation: fadeIn 0.5s ease-in-out forwards;
-            opacity: 0;
-        }
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .season-list-item, .episode-list-item {
-            transition: all 0.3s ease-in-out;
-        }
-        
-        /* Custom scrollbar for better visuals */
-        .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #e50914 #4a5568;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #4a5568;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #e50914;
-            border-radius: 10px;
-            border: 2px solid #4a5568;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 text-white font-sans h-screen flex items-center justify-center overflow-hidden">
-
-    <div class="p-4 w-full max-w-7xl">
-        <!-- URL Input and Load Button -->
-        <div class="flex items-center space-x-2 mb-4">
-            <input type="text" id="video-url-input" class="flex-grow p-2 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600 text-sm md:text-base" placeholder="Enter HLS (.m3u8) video URL here...">
-            <button id="load-video-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors duration-200 text-sm md:text-base" data-focusable>Load</button>
-        </div>
-
-        <!-- Main Player Container -->
-        <div id="video-player-container" class="relative w-full aspect-video bg-black rounded-lg md:rounded-xl overflow-hidden shadow-2xl">
-            
-            <!-- The Video Element -->
-            <video id="video-player" class="w-full h-full object-contain" preload="auto"></video>
-            
-            <!-- Thumbnail Overlay (for when video is paused) -->
-            <div id="thumbnail-overlay" class="thumbnail-overlay"></div>
-
-            <!-- Loading Spinner Overlay -->
-            <div id="loading-overlay" class="absolute inset-0 flex items-center justify-center bg-black/60 hidden">
-                <div class="loading-spinner"></div>
-            </div>
-
-            <!-- Pause Details Overlay (Initially hidden) -->
-            <div id="pause-details-overlay" class="video-details-overlay hidden z-30">
-                <div class="flex flex-col justify-center items-center p-6 md:p-12 w-full max-w-4xl">
-                    <h2 id="video-title" class="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg text-center">Stranger Things</h2>
-                    <p id="video-description" class="text-sm md:text-xl text-gray-300 leading-relaxed drop-shadow-lg text-center max-w-2xl mb-6">This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.</p>
-                    <div class="flex space-x-4">
-                        <button id="overlay-play-btn" class="px-6 py-3 md:px-10 md:py-6 bg-white text-black font-bold text-lg md:text-2xl rounded-full hover:bg-gray-300 transition-colors duration-200 shadow-lg" data-focusable>
-                            <i class="fas fa-play mr-2"></i> Play
-                        </button>
-                        <button id="all-episodes-btn" class="px-6 py-3 md:px-10 md:py-6 bg-gray-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-gray-500 transition-colors duration-200 shadow-lg" data-focusable>
-                            All Episodes
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- All Episodes Overlay (Initially hidden) -->
-            <div id="episodes-overlay" class="episodes-overlay hidden z-40">
-                <div id="episodes-main-view" class="w-full h-full flex flex-col flex-shrink-0 transition-transform duration-500">
-                    <div class="flex items-center mb-4">
-                        <button id="episodes-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <h3 class="text-xl md:text-3xl font-bold ml-4">Episodes</h3>
-                    </div>
-                    <!-- Season Selector -->
-                    <div id="season-list-container" class="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
-                        <!-- Seasons will be populated here -->
-                    </div>
-                </div>
-
-                <div id="episodes-list-view" class="w-full h-full flex-shrink-0 flex flex-col transition-transform duration-500 absolute top-0 left-0 p-4 transform translate-x-full">
-                    <div class="flex items-center mb-4">
-                        <button id="episodes-list-back-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white p-2 rounded-full" data-focusable>
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <h3 id="episodes-list-title" class="text-xl md:text-3xl font-bold ml-4">Season 1</h3>
-                    </div>
-                    <div id="episodes-list-container" class="space-y-4 flex-grow overflow-y-auto custom-scrollbar">
-                        <!-- Episodes will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- End of Video "Next Episode" Overlay -->
-            <div id="next-episode-overlay" class="absolute inset-0 flex flex-col items-center justify-center p-6 md:p-12 bg-black/70 transition-opacity duration-300 opacity-0 pointer-events-none z-30">
-                <h3 class="text-2xl md:text-4xl font-bold mb-4 drop-shadow-lg">Video Finished!</h3>
-                <button id="next-episode-btn" class="px-6 py-3 md:px-10 md:py-6 bg-red-600 text-white font-bold text-lg md:text-2xl rounded-full hover:bg-red-700 transition-colors duration-200 shadow-lg focus:ring-4 focus:ring-white" data-focusable>
-                    Play Again
-                </button>
-            </div>
-
-            <!-- Video Controls Container -->
-            <div id="video-controls" class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 hover:opacity-100 cursor-pointer z-50">
-                <!-- Progress Bar -->
-                <div class="progress-bar-container mb-3 md:mb-4">
-                    <div id="progress-buffered" class="progress-buffered"></div>
-                    <div id="progress-played" class="progress-played"></div>
-                    <input type="range" id="progress-bar" class="w-full h-full absolute" value="0" min="0" max="100">
-                </div>
-                
-                <!-- Control Buttons and Timestamps -->
-                <div class="flex items-center justify-between">
-                    <!-- Left-side Controls (Play/Pause, Seek) -->
-                    <div class="flex items-center space-x-3 md:space-x-6">
-                        <!-- Play/Pause Button -->
-                        <button id="play-pause-btn" class="text-2xl md:text-3xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                            <i class="fas fa-pause"></i> <!-- Default to pause icon assuming auto-play -->
-                        </button>
-                        <!-- Backward 10s Button -->
-                        <button id="backward-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white flex items-center" data-focusable>
-                            <i class="fas fa-redo-alt rotate-180"></i><span class="ml-1 text-sm md:text-base">10</span>
-                        </button>
-                        <!-- Forward 10s Button -->
-                        <button id="forward-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white flex items-center" data-focusable>
-                            <i class="fas fa-redo-alt"></i><span class="ml-1 text-sm md:text-base">10</span>
-                        </button>
-                    </div>
-
-                    <!-- Center time display -->
-                    <div class="flex items-center space-x-2 text-sm md:text-base font-medium text-gray-300">
-                        <span id="current-time-display">00:00</span>
-                        <span class="text-gray-500">/</span>
-                        <span id="duration-display">00:00</span>
-                    </div>
-                    
-                    <!-- Right-side Controls -->
-                    <div class="flex items-center space-x-3 md:space-x-6">
-                        <!-- Volume Controls with horizontal slider -->
-                        <div class="relative flex items-center group space-x-2">
-                            <button id="volume-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                                <i class="fas fa-volume-up"></i>
-                            </button>
-                            <!-- Volume Slider Horizontal -->
-                            <div class="hidden group-hover:block transition-all duration-300">
-                                <input type="range" id="volume-slider" class="w-20 md:w-24 h-1 rounded-full cursor-pointer" value="1" min="0" max="1" step="0.1">
-                            </div>
-                        </div>
-
-                        <!-- Settings Menu Trigger -->
-                        <div class="relative">
-                            <button id="settings-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                                <i class="fas fa-cog"></i>
-                            </button>
-                            <!-- Settings Popup -->
-                            <div id="settings-menu" class="absolute settings-menu right-0 mb-2 md:mb-4 w-52 md:w-64 p-2 md:p-4 hidden z-20">
-                                <!-- Main Settings View -->
-                                <div id="main-settings-view" class="transition-transform duration-300">
-                                    <h4 class="text-gray-400 text-xs md:text-sm font-semibold mb-2 ml-4">Settings</h4>
-                                    <ul class="space-y-1">
-                                        <li class="menu-item text-sm md:text-base" data-menu="quality-menu" data-focusable>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-hd mr-3 text-gray-400"></i><span>Video Quality</span>
-                                            </div>
-                                            <i class="fas fa-chevron-right text-gray-400"></i>
-                                        </li>
-                                        <li class="menu-item text-sm md:text-base" data-menu="audio-menu" data-focusable>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-headphones mr-3 text-gray-400"></i><span>Audio Tracks</span>
-                                            </div>
-                                            <i class="fas fa-chevron-right text-gray-400"></i>
-                                        </li>
-                                        <li class="menu-item text-sm md:text-base" data-menu="aspect-ratio-menu" data-focusable>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-arrows-alt-h mr-3 text-gray-400"></i><span>Aspect Ratio</span>
-                                            </div>
-                                            <i class="fas fa-chevron-right text-gray-400"></i>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <!-- Submenus -->
-                                <div id="quality-menu" class="menu-submenu">
-                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
-                                        <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-sm md:text-base">Video Quality</span>
-                                    </div>
-                                    <ul id="quality-options" class="space-y-1 text-sm md:text-base"></ul>
-                                </div>
-                                <div id="audio-menu" class="menu-submenu">
-                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
-                                        <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-sm md:text-base">Audio Tracks</span>
-                                    </div>
-                                    <ul id="audio-options" class="space-y-1 text-sm md:text-base"></ul>
-                                </div>
-                                <div id="aspect-ratio-menu" class="menu-submenu">
-                                    <div class="flex items-center mb-4 text-gray-400 cursor-pointer p-2 rounded-lg" data-back-btn data-focusable>
-                                        <i class="fas fa-chevron-left mr-2"></i>
-                                        <span class="text-sm md:text-base">Aspect Ratio</span>
-                                    </div>
-                                    <ul id="aspect-ratio-options" class="space-y-1 text-sm md:text-base">
-                                        <li class="menu-item text-sm md:text-base" data-aspect-ratio="contain" data-focusable>
-                                            <span>Fit (Contain)</span> <i class="fas fa-check ml-auto hidden"></i>
-                                        </li>
-                                        <li class="menu-item text-sm md:text-base" data-aspect-ratio="cover" data-focusable>
-                                            <span>Crop (Cover)</span> <i class="fas fa-check ml-auto hidden"></i>
-                                        </li>
-                                        <li class="menu-item text-sm md:text-base" data-aspect-ratio="fill" data-focusable>
-                                            <span>Fill</span> <i class="fas fa-check ml-auto hidden"></i>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Fullscreen Button -->
-                        <button id="fullscreen-btn" class="text-xl md:text-2xl text-white hover:text-gray-300 transition-colors duration-200 focus:ring-4 focus:ring-white" data-focusable>
-                            <i class="fas fa-expand"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Get all necessary DOM elements
-        const videoPlayerContainer = document.getElementById('video-player-container');
-        const video = document.getElementById('video-player');
-        const controls = document.getElementById('video-controls');
-        const playPauseBtn = document.getElementById('play-pause-btn');
-        const backwardBtn = document.getElementById('backward-btn');
-        const forwardBtn = document.getElementById('forward-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const progressPlayed = document.getElementById('progress-played');
-        const progressBuffered = document.getElementById('progress-buffered');
-        const currentTimeDisplay = document.getElementById('current-time-display');
-        const durationDisplay = document.getElementById('duration-display');
-        const volumeBtn = document.getElementById('volume-btn');
-        const volumeSlider = document.getElementById('volume-slider');
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const pauseDetailsOverlay = document.getElementById('pause-details-overlay');
-        const overlayPlayBtn = document.getElementById('overlay-play-btn');
-        const allEpisodesBtn = document.getElementById('all-episodes-btn');
-        const episodesOverlay = document.getElementById('episodes-overlay');
-        const episodesBackBtn = document.getElementById('episodes-back-btn');
-        const episodesListBackBtn = document.getElementById('episodes-list-back-btn');
-        const seasonListContainer = document.getElementById('season-list-container');
-        const episodesListView = document.getElementById('episodes-list-view');
-        const episodesListContainer = document.getElementById('episodes-list-container');
-        const episodesListTitle = document.getElementById('episodes-list-title');
-
-        const nextEpisodeOverlay = document.getElementById('next-episode-overlay');
-        const nextEpisodeBtn = document.getElementById('next-episode-btn');
-        const videoUrlInput = document.getElementById('video-url-input');
-        const loadVideoBtn = document.getElementById('load-video-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const settingsMenu = document.getElementById('settings-menu');
-        const mainSettingsView = document.getElementById('main-settings-view');
-        const qualityMenu = document.getElementById('quality-menu');
-        const audioMenu = document.getElementById('audio-menu');
-        const qualityOptions = document.getElementById('quality-options');
-        const audioOptions = document.getElementById('audio-options');
-        const aspectRatioMenu = document.getElementById('aspect-ratio-menu');
-        const aspectRatioOptions = document.getElementById('aspect-ratio-options');
-        const thumbnailOverlay = document.getElementById('thumbnail-overlay');
-
-        const focusableElements = Array.from(document.querySelectorAll('[data-focusable]'));
-        
-        let hls; // Declare HLS instance globally
-        let controlsTimeout;
-        
-        // --- Mock Data for Episodes ---
-        const seriesData = {
-            title: "Stranger Things",
-            description: "This thrilling Netflix original drama stars Golden Globe-winning actress Winona Ryder as Joyce Byers, who lives in a small town.",
-            thumbnailUrl: "https://placehold.co/1920x1080/120302/ffffff?text=Stranger+Things",
-            seasons: [
-                {
-                    season: 1,
-                    episodes: [
-                        { id: 1, title: "The Vanishing of Will Byers", duration: "49 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E1" },
-                        { id: 2, title: "The Weirdo on Maple Street", duration: "55 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E2" },
-                        { id: 3, title: "Holly, Jolly", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E3" },
-                        { id: 4, title: "The Body", duration: "50 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=E4" },
-                    ]
-                },
-                {
-                    season: 2,
-                    episodes: [
-                        { id: 1, title: "Chapter One: MADMAX", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E1" },
-                        { id: 2, title: "Chapter Two: Trick or Treat, Freak", duration: "56 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E2" },
-                        { id: 3, title: "Chapter Three: The Pollywog", duration: "57 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E3" },
-                        { id: 4, title: "Chapter Four: Will the Wise", duration: "51 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S2+E4" },
-                    ]
-                },
-                {
-                    season: 3,
-                    episodes: [
-                        { id: 1, title: "Chapter One: Suzie, Do You Copy?", duration: "50 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E1" },
-                        { id: 2, title: "Chapter Two: The Mall Rats", duration: "58 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E2" },
-                        { id: 3, title: "Chapter Three: The Case of the Missing Lifeguard", duration: "48 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E3" },
-                        { id: 4, title: "Chapter Four: The Sauna Test", duration: "53 min", thumbnail: "https://placehold.co/120x67/120302/ffffff?text=S3+E4" },
-                    ]
-                }
-            ]
-        };
-
-        // --- Core Player Functions ---
-        
-        function loadVideo(url) {
-            if (hls) {
-                hls.destroy();
-                hls = null;
-            }
-            video.src = '';
-            
-            if (Hls.isSupported() && url) {
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    console.log("HLS Manifest loaded, starting playback...");
-                    populateQualityOptions(hls.levels);
-                    populateAudioOptions(hls.audioTracks);
-                    updateActiveMenuItem(qualityOptions, hls.currentLevel === -1 ? -1 : hls.currentLevel, 'level');
-                    updateActiveMenuItem(audioOptions, hls.audioTrack, 'audioIndex');
-                    updateActiveMenuItem(aspectRatioOptions, video.style.objectFit || 'contain', 'aspectRatio');
-                    video.play();
-                });
-
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    console.error('HLS Error:', data);
-                    if (data.fatal) {
-                        showCustomMessage(`Fatal HLS error: ${data.details}. Please try another video URL.`);
-                        hls.destroy();
-                    }
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
-                video.addEventListener('loadedmetadata', function() {
-                    video.play();
-                });
-            } else {
-                showCustomMessage('Your browser does not support HLS streaming.');
-            }
-        }
-        
-        // --- Settings Menu Functions ---
-        
-        function updateActiveMenuItem(ulElement, activeValue, datasetKey) {
-            ulElement.querySelectorAll('.menu-item').forEach(item => {
-                const checkmark = item.querySelector('.fas.fa-check');
-                if (checkmark) {
-                    checkmark.classList.add('hidden');
-                }
-            });
-
-            let targetItem;
-            if (datasetKey === 'level' || datasetKey === 'audioIndex') {
-                targetItem = ulElement.querySelector(`[data-${datasetKey}="${activeValue}"]`);
-            } else if (datasetKey === 'aspectRatio') {
-                 targetItem = ulElement.querySelector(`[data-${datasetKey}="${activeValue}"]`);
-            }
-           
-            if (targetItem) {
-                const checkmark = targetItem.querySelector('.fas.fa-check');
-                if (checkmark) {
-                    checkmark.classList.remove('hidden');
-                }
-            }
-        }
-
-        function populateQualityOptions(levels) {
-            qualityOptions.innerHTML = `<li class="menu-item text-sm md:text-base p-2 rounded cursor-pointer" data-level="-1" data-focusable><span>Auto</span><i class="fas fa-check ml-auto hidden"></i></li>`;
-            levels.forEach((level, index) => {
-                const li = document.createElement('li');
-                li.classList.add('menu-item', 'text-sm', 'md:text-base', 'p-2', 'rounded', 'cursor-pointer');
-                li.innerHTML = `<span>${level.height}p</span><i class="fas fa-check ml-auto hidden"></i>`;
-                li.dataset.level = index;
-                li.dataset.focusable = true;
-                qualityOptions.appendChild(li);
-            });
-        }
-        
-        function populateAudioOptions(tracks) {
-            audioOptions.innerHTML = '';
-            if (tracks && tracks.length > 0) {
-                tracks.forEach((track, index) => {
-                    const li = document.createElement('li');
-                    li.classList.add('menu-item', 'text-sm', 'md:text-base', 'p-2', 'rounded', 'cursor-pointer');
-                    li.innerHTML = `<span>${track.name}</span><i class="fas fa-check ml-auto hidden"></i>`;
-                    li.dataset.audioIndex = index;
-                    li.dataset.focusable = true;
-                    audioOptions.appendChild(li);
-                });
-            } else {
-                audioOptions.innerHTML = '<li class="text-gray-400 p-2 text-sm md:text-base">No audio tracks available.</li>';
-            }
-        }
-
-        // --- UI and Event Handlers ---
-
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            const formattedMinutes = String(minutes).padStart(2, '0');
-            const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-            return `${formattedMinutes}:${formattedSeconds}`;
-        }
-
-        function updatePlayerUI() {
-            const playIcon = video.paused ? 'fa-play' : 'fa-pause';
-            playPauseBtn.querySelector('i').className = `fas ${playIcon}`;
-
-            currentTimeDisplay.textContent = formatTime(video.currentTime);
-            durationDisplay.textContent = isNaN(video.duration) ? '00:00' : formatTime(video.duration);
-
-            if (!isNaN(video.duration)) {
-                const progress = (video.currentTime / video.duration) * 100;
-                progressBar.value = progress;
-                progressPlayed.style.width = `${progress}%`;
-            }
-            
-            if (video.buffered.length > 0) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const bufferedPercent = (bufferedEnd / video.duration) * 100;
-                progressBuffered.style.width = `${bufferedPercent}%`;
-            }
-
-            const volumeIcon = video.muted || video.volume === 0 ? 'fa-volume-mute' : (video.volume > 0.5 ? 'fa-volume-up' : 'fa-volume-down');
-            volumeBtn.querySelector('i').className = `fas ${volumeIcon}`;
-        }
-        
-        function showCustomMessage(message) {
-            const modal = document.createElement('div');
-            modal.classList.add('fixed', 'inset-0', 'bg-black/70', 'flex', 'items-center', 'justify-center', 'z-50');
-            modal.innerHTML = `
-                <div class="bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm text-center">
-                    <p class="text-xl font-bold mb-4">${message}</p>
-                    <button class="px-6 py-2 bg-red-600 rounded-full hover:bg-red-700" onclick="this.closest('.fixed').remove()">OK</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-        
-        function generateSeasonList() {
-            seasonListContainer.innerHTML = '';
-            seriesData.seasons.forEach((season, index) => {
-                const seasonCard = document.createElement('div');
-                seasonCard.classList.add('season-card', 'p-4', 'bg-gray-800', 'rounded-lg', 'cursor-pointer', 'flex', 'justify-between', 'items-center', 'hover:bg-gray-700', 'transition-colors', 'duration-200');
-                seasonCard.style.animationDelay = `${index * 0.1}s`;
-                seasonCard.innerHTML = `
-                    <span class="text-lg font-semibold">Season ${season.season}</span>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                `;
-                seasonCard.dataset.season = season.season;
-                seasonCard.addEventListener('click', () => {
-                    displayEpisodesForSeason(season.season);
-                });
-                seasonListContainer.appendChild(seasonCard);
-            });
-        }
-
-        function displayEpisodesForSeason(seasonNumber) {
-            const season = seriesData.seasons.find(s => s.season === seasonNumber);
-            if (!season) return;
-
-            episodesListTitle.textContent = `Season ${season.season}`;
-            episodesListContainer.innerHTML = '';
-            
-            season.episodes.forEach((episode, index) => {
-                const episodeCard = document.createElement('div');
-                episodeCard.classList.add('episode-card');
-                episodeCard.style.animationDelay = `${index * 0.1}s`;
-                episodeCard.innerHTML = `
-                    <img src="${episode.thumbnail}" alt="Episode ${episode.id} thumbnail" class="rounded-lg">
-                    <div class="flex-grow">
-                        <p class="font-semibold text-lg">E${episode.id}: ${episode.title}</p>
-                        <p class="text-gray-400 text-sm">${episode.duration}</p>
-                    </div>
-                `;
-                // Add click event for playing the episode (currently just a log)
-                episodeCard.addEventListener('click', () => {
-                    console.log(`Playing S${season.season} E${episode.id}`);
-                    // In a real app, you would load the video URL for this episode here.
-                    video.play();
-                });
-                episodesListContainer.appendChild(episodeCard);
-            });
-            
-            // Animate the transition to the episode list view
-            episodesListView.classList.remove('translate-x-full');
-            episodesListView.classList.add('translate-x-0');
-        }
+	
+<!--    选择直播源    -->
+<script>
+    function changelive(value){
+        document.getElementById("url").value=value;
+		document.getElementById("doplayers").click();
+    }
+</script>
 
 
-        // --- Event Listeners ---
+<script>
+      let currUrl = window.location.href;  
+      let targetUrl = 'https://linqingping.github.io/M3U8-player/';
+  
+      if (currUrl != 'https://linqingping.github.io/M3U8-player/') {
+        window.location.href = targetUrl;
+      }
+</script>
 
-        // Load video from URL input
-        loadVideoBtn.addEventListener('click', () => {
-            const url = videoUrlInput.value;
-            if (url) {
-                loadVideo(url);
-            }
-        });
+<!-- 百度统计 -->
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?1b95b995e35aad78ba6f747b65ed16a9";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+	
 
-        // Load a default video on page load for demonstration
-        window.addEventListener('load', () => {
-            videoUrlInput.value = 'https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8';
-            loadVideo(videoUrlInput.value);
-            updatePlayerUI();
-            
-            // Set initial focus for remote navigation (e.g., for TV)
-            setTimeout(() => {
-                const initialFocusable = document.querySelector('[data-focusable]');
-                if (initialFocusable) {
-                    initialFocusable.focus();
-                }
-            }, 500);
-        });
-
-        // Play/Pause button on control bar
-        playPauseBtn.addEventListener('click', () => {
-            if (video.paused) {
-                video.play();
-            } else {
-                video.pause();
-            }
-        });
-        
-        // Play button on pause overlay
-        overlayPlayBtn.addEventListener('click', () => {
-            video.play();
-        });
-
-        // "All Episodes" button on pause overlay
-        allEpisodesBtn.addEventListener('click', () => {
-            pauseDetailsOverlay.classList.add('hidden');
-            episodesOverlay.classList.remove('hidden');
-            episodesOverlay.classList.add('active');
-            generateSeasonList(); // Generate season list when button is clicked
-        });
-
-        // Back button from season list to pause screen
-        episodesBackBtn.addEventListener('click', () => {
-            episodesOverlay.classList.remove('active');
-            episodesOverlay.classList.add('hidden');
-            pauseDetailsOverlay.classList.remove('hidden');
-        });
-
-        // Back button from episode list to season list
-        episodesListBackBtn.addEventListener('click', () => {
-            episodesListView.classList.add('translate-x-full');
-            episodesListView.classList.remove('translate-x-0');
-        });
-
-        // Backward 10s button
-        backwardBtn.addEventListener('click', () => {
-            video.currentTime -= 10;
-        });
-
-        // Forward 10s button
-        forwardBtn.addEventListener('click', () => {
-            video.currentTime += 10;
-        });
-
-        // Video playback events
-        video.addEventListener('play', () => {
-            updatePlayerUI();
-            pauseDetailsOverlay.classList.add('hidden');
-            episodesOverlay.classList.add('hidden');
-            loadingOverlay.classList.add('hidden');
-            thumbnailOverlay.classList.remove('active'); // Hide thumbnail
-            // Attempt to lock screen orientation on mobile devices
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(e => {
-                    console.log('Orientation lock failed:', e);
-                });
-            }
-        });
-
-        video.addEventListener('pause', () => {
-            updatePlayerUI();
-            pauseDetailsOverlay.classList.remove('hidden');
-            episodesOverlay.classList.add('hidden');
-            episodesListView.classList.add('translate-x-full');
-            // Show thumbnail with a mock URL
-            thumbnailOverlay.style.backgroundImage = `url(${seriesData.thumbnailUrl})`;
-            thumbnailOverlay.classList.add('active');
-        });
-
-        video.addEventListener('timeupdate', () => updatePlayerUI());
-        video.addEventListener('waiting', () => loadingOverlay.classList.remove('hidden'));
-        video.addEventListener('playing', () => loadingOverlay.classList.add('hidden'));
-        video.addEventListener('loadedmetadata', () => updatePlayerUI());
-
-        // Seek functionality
-        progressBar.addEventListener('input', () => {
-            if (!isNaN(video.duration)) {
-                const newTime = (progressBar.value / 100) * video.duration;
-                video.currentTime = newTime;
-            }
-        });
-
-        // Volume control
-        volumeSlider.addEventListener('input', () => {
-            video.volume = volumeSlider.value;
-            video.muted = video.volume === 0;
-            updatePlayerUI();
-        });
-
-        // --- Settings Menu Logic ---
-        settingsBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            settingsMenu.classList.toggle('hidden');
-            mainSettingsView.style.transform = 'translateX(0)';
-            document.querySelectorAll('.menu-submenu').forEach(menu => menu.classList.remove('active'));
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!settingsMenu.contains(e.target) && !settingsBtn.contains(e.target)) {
-                settingsMenu.classList.add('hidden');
-                document.querySelectorAll('.menu-submenu').forEach(menu => menu.classList.remove('active'));
-            }
-        });
-
-        settingsMenu.addEventListener('click', (e) => {
-            const mainItem = e.target.closest('[data-menu]');
-            const backBtn = e.target.closest('[data-back-btn]');
-
-            if (mainItem) {
-                const menuId = mainItem.dataset.menu;
-                document.getElementById(menuId).classList.add('active');
-            } else if (backBtn) {
-                backBtn.closest('.menu-submenu').classList.remove('active');
-            }
-        });
-
-        // Quality selection
-        qualityOptions.addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (li && li.dataset.level) {
-                if (hls) {
-                    hls.currentLevel = parseInt(li.dataset.level, 10);
-                }
-                updateActiveMenuItem(qualityOptions, hls.currentLevel, 'level');
-            }
-        });
-        
-        // Audio track selection
-        audioOptions.addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (li && li.dataset.audioIndex) {
-                if (hls) {
-                    hls.audioTrack = parseInt(li.dataset.audioIndex, 10);
-                }
-                updateActiveMenuItem(audioOptions, hls.audioTrack, 'audioIndex');
-            }
-        });
-
-        // Aspect Ratio selection
-        aspectRatioOptions.addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (li && li.dataset.aspectRatio) {
-                const ratio = li.dataset.aspectRatio;
-                video.style.objectFit = ratio;
-                updateActiveMenuItem(aspectRatioOptions, ratio, 'aspectRatio');
-            }
-        });
-
-        // Fullscreen functionality
-        fullscreenBtn.addEventListener('click', () => {
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            } else {
-                videoPlayerContainer.requestFullscreen();
-            }
-        });
-
-        document.addEventListener('fullscreenchange', () => {
-            const fullscreenIcon = document.fullscreenElement ? 'fa-compress' : 'fa-expand';
-            fullscreenBtn.querySelector('i').className = `fas ${fullscreenIcon}`;
-        });
-        
-        // Show/hide controls on mouse movement/touch
-        let controlsVisible = true;
-        const hideControls = () => {
-            if (!video.paused && controlsVisible) {
-                controls.classList.add('opacity-0', 'pointer-events-none');
-                controlsVisible = false;
-            }
-        };
-
-        const showControls = () => {
-            controls.classList.remove('opacity-0', 'pointer-events-none');
-            controlsVisible = true;
-            clearTimeout(controlsTimeout);
-            controlsTimeout = setTimeout(hideControls, 3000);
-        };
-
-        videoPlayerContainer.addEventListener('mousemove', showControls);
-        videoPlayerContainer.addEventListener('mouseleave', () => {
-            if (!video.paused) {
-                clearTimeout(controlsTimeout); // Clear any pending show controls timeout
-                controlsTimeout = setTimeout(hideControls, 3000);
-            }
-        });
-        // For touch devices, toggle visibility on tap
-        videoPlayerContainer.addEventListener('click', (e) => {
-            if (!controls.contains(e.target) && !settingsMenu.contains(e.target) && e.target !== videoUrlInput && e.target !== loadVideoBtn) { 
-                if (controlsVisible) {
-                    hideControls();
-                } else {
-                    showControls();
-                }
-            }
-        });
+<script>
+	const xhr = new XMLHttpRequest();
+	xhr.open("GET", "https://raw.githubusercontent.com/linqingping/M3U8-player/master/sources.m3u8");
+	xhr.onload = () => {
+	  const m3u8Text = xhr.responseText;
+	  const segments = [];
+	  let name;
+	  const lines = m3u8Text.split('\n');
+	  for (let i = 0; i < lines.length; i++) {
+		if (lines[i].startsWith('#EXTINF:')) {
+		  name = lines[i].split(',')[1].trim();  
+		} else if (lines[i].startsWith('https')) {  
+		  const url = lines[i];
+		  segments.push({
+			name,
+			url  
+		  });
+		  name = null;
+		}
+	  } 
+	  const div = document.getElementById("test")
+	  for (let i = 0; i < segments.length; i++) {
+		const link = document.createElement('a');
+		link.href = '#';
+		link.style.display = 'inline-block';
+		link.innerText = segments[i].name;
+		link.onclick = () => changelive(segments[i].url,segments[i].name);
+		div.appendChild(link);
+	  }
+  
+	}
+	xhr.send();
+  </script>
 
 
-        // Show Next Episode overlay when video ends
-        video.addEventListener('ended', () => {
-            nextEpisodeOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            nextEpisodeOverlay.classList.add('opacity-100', 'pointer-events-auto');
-            controls.classList.remove('opacity-100');
-            controls.classList.add('opacity-0');
-        });
-
-        // Reset and play the video again
-        nextEpisodeBtn.addEventListener('click', () => {
-            nextEpisodeOverlay.classList.remove('opacity-100', 'pointer-events-auto');
-            nextEpisodeOverlay.classList.add('opacity-0', 'pointer-events-none');
-            video.currentTime = 0;
-            video.play();
-        });
-        
-        // --- Remote Navigation (Keyboard Control) ---
-        // This makes the player controllable by arrow keys and Enter, useful for TV remote simulation
-        document.addEventListener('keydown', (e) => {
-            const currentFocus = document.activeElement;
-            let currentFocusIndex = focusableElements.indexOf(currentFocus);
-            
-            showControls(); // Always show controls on key press
-
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                if (currentFocusIndex < focusableElements.length - 1) {
-                    focusableElements[currentFocusIndex + 1].focus();
-                } else { // Wrap around
-                    focusableElements[0].focus();
-                }
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                if (currentFocusIndex > 0) {
-                    focusableElements[currentFocusIndex - 1].focus();
-                } else { // Wrap around
-                    focusableElements[focusableElements.length - 1].focus();
-                }
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                if (currentFocus) {
-                    currentFocus.click();
-                }
-            } else if (e.key === ' ') { // Spacebar for play/pause
-                e.preventDefault();
-                playPauseBtn.click();
-            } else if (e.key === 'k' || e.key === 'K') { // Netflix-style hotkey for play/pause
-                playPauseBtn.click();
-            } else if (e.key === 'm' || e.key === 'M') { // Mute/Unmute
-                video.muted = !video.muted;
-                volumeSlider.value = video.muted ? 0 : 1; // Sync slider
-                updatePlayerUI();
-            }
-        });
-    </script>
-</body>
-</html>
-
+<div style="display:none"></div>
